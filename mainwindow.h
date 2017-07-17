@@ -15,6 +15,9 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDir>
+#include <QLineEdit>
+#include <QCheckBox>
+#include <QGroupBox>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -33,27 +36,38 @@ public:
 private:
     Ui::MainWindow *ui;
 
-    QPushButton* btn1;
-    QLabel* label1;
-    QPlainTextEdit* plntxt;
+    QPushButton* btnOpenClose;
+    QLabel* labelTimeDisp;
+    QPlainTextEdit* plntxtOutput;
     QDateTime* datetime;
-    QSerialPort* myserial;
+    QSerialPort* mySerialPort;
     QComboBox* baudrates;
-    QComboBox* choosecoms;
-    QPushButton* btn2;
-    QPalette* pt;
-    QComboBox* ptBox;
-    QPushButton* btn3;
+    QComboBox* chooseComs;
+    QPushButton* btnClrScrn;
+    QComboBox* pltBox;
+    QPushButton* btnSave;
     QPushButton* connectStatus;
+    QLineEdit* leInput;
+    QPushButton* btnSend;
+    QCheckBox* send0D;
+    QCheckBox* send0A;
+    QCheckBox* showhex;
+    QCheckBox* sendhex;
+    qlonglong sendbytecounter;
+    qlonglong receivebytecounter;
+    QLabel* labelSendBytes;
+    QLabel* labelReceiveBytes;
 
 private slots:
-    void on_pushbutton_clicked(void);
+    void on_openclosebutton_clicked(void);
     void showtime(void);
     void showserial(void);
-    void updatesettings(void);
-    void updatesettings2(void);
-    void on_pushbutton_clicked2(void);
-    void on_pushbutton_clicked3(void);
+    void update_settings_caused_by_baudrates(void);
+    void update_settings_caused_by_choosecoms(void);
+    void on_clrscrnbutton_clicked(void);
+    void on_savebutton_clicked(void);
+    void on_sendbutton_clicked(void);
+    void proc_sendhex_stateChanged(void);
 };
 
 #endif // MAINWINDOW_H
