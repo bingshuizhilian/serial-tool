@@ -9,8 +9,12 @@ MainWindow::MainWindow(QWidget *parent) :
     labelTimeDisp(new QLabel),
     plntxtOutput(new QPlainTextEdit),
     datetime(new QDateTime),
+    choosecoms(new QComboBox),
     baudrates(new QComboBox),
-    chooseComs(new QComboBox),
+    databits(new QComboBox),
+    stopbits(new QComboBox),
+    parity(new QComboBox),
+    flowcontrol(new QComboBox),
     btnClrScrn(new QPushButton(tr("clear screen"))),
     pltBox(new QComboBox),
     btnSave(new QPushButton(tr("save screen"))),
@@ -37,35 +41,80 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->statusBar->addWidget(labelReceiveBytes);
     ui->mainToolBar->close();
     setWindowTitle(tr("serial port tool"));
-    auto labelAuthorInfo = new QLabel(tr("designed by y18077"));
+    auto labelAuthorInfo = new QLabel(tr("bingshuizhilian@yeah.net"));
+    labelAuthorInfo->setOpenExternalLinks(true);
+    labelAuthorInfo->setText(QString::fromLocal8Bit("<style> a {text-decoration: none} </style> <a href = https://www.github.com/bingshuizhilian> contact author </a>"));
+    labelAuthorInfo->show();
     ui->statusBar->addPermanentWidget(labelAuthorInfo);
 
-    //port and theme
+    //port name
     auto layoutPortGroupBox = new QGridLayout;
+    const auto infos = QSerialPortInfo::availablePorts();
+    for(auto &info : infos) choosecoms->addItem(info.portName(), info.portName());
+    connect(choosecoms,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &update_settings_caused_by_choosecoms);
+    auto labelCom = new QLabel(tr("Com name"));
+    layoutPortGroupBox->addWidget(labelCom, 0, 0);
+    layoutPortGroupBox->addWidget(choosecoms, 0, 1);
+    //baudrate
     baudrates->addItem(QStringLiteral("4800"), 4800);
     baudrates->addItem(QStringLiteral("9600"), 9600);
     baudrates->addItem(QStringLiteral("19200"), 19200);
     baudrates->addItem(QStringLiteral("38400"), 38400);
     baudrates->addItem(QStringLiteral("115200"), 115200);
     baudrates->addItem(QStringLiteral("460800"), 460800);
+    baudrates->addItem(tr("Custom"));
     baudrates->setCurrentIndex(4);
-    connect(baudrates,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &update_settings_caused_by_baudrates);
+    baudrates->setInsertPolicy(QComboBox::NoInsert);
+    connect(baudrates,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hot_update_settings);
+    connect(baudrates,  &QComboBox::editTextChanged, this, &hot_update_settings);
     auto labelBaudrate = new QLabel(tr("Baudrate"));
-    layoutPortGroupBox->addWidget(labelBaudrate, 0, 0);
-    layoutPortGroupBox->addWidget(baudrates, 0, 1);
-    const auto infos = QSerialPortInfo::availablePorts();
-    for(auto &info : infos) chooseComs->addItem(info.portName(), info.portName());
-    connect(chooseComs,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &update_settings_caused_by_choosecoms);
-    auto labelCom = new QLabel(tr("COM"));
-    layoutPortGroupBox->addWidget(labelCom, 1, 0);
-    layoutPortGroupBox->addWidget(chooseComs, 1, 1);
-    pltBox->addItem(QStringLiteral("day"));
-    pltBox->addItem(QStringLiteral("night"));
-    connect(pltBox,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &update_settings_caused_by_baudrates);
+    layoutPortGroupBox->addWidget(labelBaudrate, 1, 0);
+    layoutPortGroupBox->addWidget(baudrates, 1, 1);
+    //data bits
+    databits->addItem(QStringLiteral("5"), QSerialPort::Data5);
+    databits->addItem(QStringLiteral("6"), QSerialPort::Data6);
+    databits->addItem(QStringLiteral("7"), QSerialPort::Data7);
+    databits->addItem(QStringLiteral("8"), QSerialPort::Data8);
+    databits->setCurrentIndex(3);
+    connect(databits,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hot_update_settings);
+    auto labelDatabits = new QLabel(tr("Data bits"));
+    layoutPortGroupBox->addWidget(labelDatabits, 2, 0);
+    layoutPortGroupBox->addWidget(databits, 2, 1);
+    //parity
+    parity->addItem(tr("None"), QSerialPort::NoParity);
+    parity->addItem(tr("Even"), QSerialPort::EvenParity);
+    parity->addItem(tr("Odd"), QSerialPort::OddParity);
+    parity->addItem(tr("Mark"), QSerialPort::MarkParity);
+    parity->addItem(tr("Space"), QSerialPort::SpaceParity);
+    connect(parity,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hot_update_settings);
+    auto labelParity = new QLabel(tr("Parity"));
+    layoutPortGroupBox->addWidget(labelParity, 3, 0);
+    layoutPortGroupBox->addWidget(parity, 3, 1);
+    //stop bits
+    stopbits->addItem(QStringLiteral("1"), QSerialPort::OneStop);
+    stopbits->addItem(tr("1.5"), QSerialPort::OneAndHalfStop);
+    stopbits->addItem(QStringLiteral("2"), QSerialPort::TwoStop);
+    connect(stopbits,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hot_update_settings);
+    auto labelStopbits = new QLabel(tr("Stop bits"));
+    layoutPortGroupBox->addWidget(labelStopbits, 4, 0);
+    layoutPortGroupBox->addWidget(stopbits, 4, 1);
+    //flow control
+    flowcontrol->addItem(tr("None"), QSerialPort::NoFlowControl);
+    flowcontrol->addItem(tr("RTS/CTS"), QSerialPort::HardwareControl);
+    flowcontrol->addItem(tr("XON/XOFF"), QSerialPort::SoftwareControl);
+    connect(flowcontrol,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hot_update_settings);
+    auto labelFlowcontrol = new QLabel(tr("Flow ctrl"));
+    layoutPortGroupBox->addWidget(labelFlowcontrol, 5, 0);
+    layoutPortGroupBox->addWidget(flowcontrol, 5, 1);
+    //theme
+    pltBox->addItem(QStringLiteral("light"));
+    pltBox->addItem(QStringLiteral("dark"));
+    connect(pltBox,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hot_update_settings);
     auto labelTheme = new QLabel(tr("Theme"));
-    layoutPortGroupBox->addWidget(labelTheme, 2, 0);
-    layoutPortGroupBox->addWidget(pltBox, 2, 1);
+    layoutPortGroupBox->addWidget(labelTheme, 6, 0);
+    layoutPortGroupBox->addWidget(pltBox, 6, 1);
 
+    //serial port setting related layout
     auto comSettingGroupBox = new QGroupBox;
     comSettingGroupBox->setTitle(tr("port settings"));
     comSettingGroupBox->setLayout(layoutPortGroupBox);
@@ -94,18 +143,18 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(btnClrScrn, &btnClrScrn->clicked, this, &on_clrscrnbutton_clicked);
     layoutButtons->addWidget(btnClrScrn);
 
-    //left layout
+    //global left layout
     auto layoutLeft = new QVBoxLayout;
     layoutLeft->addWidget(comSettingGroupBox);
     layoutLeft->addWidget(editSettingGroupBox);
     layoutLeft->addLayout(layoutButtons);
 
-    //right layout
+    //global right layout
     auto layoutRight = new QVBoxLayout;
     plntxtOutput->setReadOnly(true);
     layoutRight->addWidget(plntxtOutput);
 
-    //sub layout of right layout
+    //sub layout of global right layout
     auto layoutRightSubInput = new QHBoxLayout;
     connect(leInput, &leInput->returnPressed, this, &on_sendbutton_clicked);
     layoutRightSubInput->addWidget(leInput);
@@ -116,10 +165,15 @@ MainWindow::MainWindow(QWidget *parent) :
     layoutRight->addLayout(layoutRightSubInput);
 
     //global layout
-    auto layoutMain = new QHBoxLayout;
-    layoutMain->addLayout(layoutLeft);
-    layoutMain->addLayout(layoutRight);
-    ui->centralWidget->setLayout(layoutMain);
+    auto layoutGlobal = new QHBoxLayout;
+    layoutGlobal->addLayout(layoutLeft);
+    layoutGlobal->addLayout(layoutRight);
+    ui->centralWidget->setLayout(layoutGlobal);
+
+    //resize the main window
+    QSize size = this->size();
+    size.setWidth(700);
+    this->resize(size);
 
     //clock timer
     QTimer *RTCtimer = new QTimer(this);
@@ -129,7 +183,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //additional initialization
     mySerialPort = new QSerialPort(this);
-    update_settings_caused_by_baudrates();
+    hot_update_settings();
     connect(mySerialPort, &QSerialPort::readyRead, this, &MainWindow::showserial);
 }
 
@@ -159,7 +213,7 @@ void MainWindow::on_openclosebutton_clicked(void)
         btnSend->setEnabled(false);
     }
 
-    update_settings_caused_by_baudrates();
+    hot_update_settings();
 }
 
 void MainWindow::on_clrscrnbutton_clicked(void)
@@ -253,10 +307,30 @@ void MainWindow::showserial(void)
     labelReceiveBytes->setText(receiveBytesString);
 }
 
-void MainWindow::update_settings_caused_by_baudrates(void)
+void MainWindow::hot_update_settings(void)
 {
-    mySerialPort->setPortName(chooseComs->itemData(chooseComs->currentIndex()).toString());
-    mySerialPort->setBaudRate(baudrates->itemData(baudrates->currentIndex()).toInt());
+    if (6 == baudrates->currentIndex())
+    {
+        baudrates->setEditable(true);
+        if("Custom" == baudrates->currentText())
+            baudrates->clearEditText();
+        QLineEdit *edit = baudrates->lineEdit();
+        QIntValidator *intValidator = new QIntValidator(0, 4000000);
+        edit->setValidator(intValidator);
+        mySerialPort->setBaudRate(baudrates->currentText().toInt());
+        qDebug() << "baudrates:" << baudrates->currentText().toInt() << "\n";
+    }
+    else
+    {
+        baudrates->setEditable(false);
+        mySerialPort->setBaudRate(baudrates->itemData(baudrates->currentIndex()).toInt());
+    }
+
+    mySerialPort->setPortName(choosecoms->itemData(choosecoms->currentIndex()).toString());
+    mySerialPort->setDataBits(static_cast<QSerialPort::DataBits>(databits->itemData(databits->currentIndex()).toInt()));
+    mySerialPort->setParity(static_cast<QSerialPort::Parity>(parity->itemData(parity->currentIndex()).toInt()));
+    mySerialPort->setStopBits(static_cast<QSerialPort::StopBits>(stopbits->itemData(stopbits->currentIndex()).toInt()));
+    mySerialPort->setFlowControl(static_cast<QSerialPort::FlowControl>(flowcontrol->itemData(flowcontrol->currentIndex()).toInt()));
 
     auto plt = plntxtOutput->palette();
     switch(pltBox->currentIndex())
@@ -297,7 +371,7 @@ void MainWindow::update_settings_caused_by_choosecoms(void)
         connectStatus->setStyleSheet("color:gray;font:12pt;border-style:outset;");
     }
 
-    mySerialPort->setPortName(chooseComs->itemData(chooseComs->currentIndex()).toString());
+    mySerialPort->setPortName(choosecoms->itemData(choosecoms->currentIndex()).toString());
 }
 
 void MainWindow::proc_sendhex_stateChanged(void)
