@@ -11,6 +11,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = serialtool
 TEMPLATE = app
+
+#Add your own icon file here
 RC_ICONS = appicon.ico
 
 # The following define makes your compiler emit warnings if you use
