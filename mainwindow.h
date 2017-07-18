@@ -19,6 +19,8 @@
 #include <QCheckBox>
 #include <QGroupBox>
 
+//#include <QDebug>
+
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class MainWindow;
@@ -41,8 +43,12 @@ private:
     QPlainTextEdit* plntxtOutput;
     QDateTime* datetime;
     QSerialPort* mySerialPort;
+    QComboBox* choosecoms;
     QComboBox* baudrates;
-    QComboBox* chooseComs;
+    QComboBox* databits;
+    QComboBox* stopbits;
+    QComboBox* parity;
+    QComboBox* flowcontrol;
     QPushButton* btnClrScrn;
     QComboBox* pltBox;
     QPushButton* btnSave;
@@ -62,7 +68,7 @@ private slots:
     void on_openclosebutton_clicked(void);
     void showtime(void);
     void showserial(void);
-    void update_settings_caused_by_baudrates(void);
+    void hot_update_settings(void);
     void update_settings_caused_by_choosecoms(void);
     void on_clrscrnbutton_clicked(void);
     void on_savebutton_clicked(void);
