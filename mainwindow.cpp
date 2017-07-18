@@ -318,7 +318,6 @@ void MainWindow::hot_update_settings(void)
         QIntValidator *intValidator = new QIntValidator(0, 4000000);
         edit->setValidator(intValidator);
         mySerialPort->setBaudRate(baudrates->currentText().toInt());
-        qDebug() << "baudrates:" << baudrates->currentText().toInt() << "\n";
     }
     else
     {
