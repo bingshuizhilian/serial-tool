@@ -34,7 +34,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //status bar
     ui->statusBar->addWidget(labelTimeDisp);
-    connectStatus->setFixedSize(110, 30);
     connectStatus->setDisabled(true);
     ui->statusBar->addWidget(connectStatus);
     ui->statusBar->addWidget(labelSendBytes);
@@ -142,7 +141,6 @@ MainWindow::MainWindow(QWidget *parent) :
     btnClrScrn->setFixedHeight(30);
     connect(btnClrScrn, &btnClrScrn->clicked, this, &on_clrscrnbutton_clicked);
     layoutButtons->addWidget(btnClrScrn, 1, 1, 1, 1);
-
 
 
     //global left layout
@@ -357,7 +355,16 @@ void MainWindow::hot_update_settings(void)
 
     if(btnOpenClose->text() == tr("close port"))
     {
-        connectStatus->setText("connected");
+        QString tmpConnectStatus = "connected to ";
+        tmpConnectStatus += choosecoms->itemData(choosecoms->currentIndex()).toString();
+        tmpConnectStatus += " @ ";
+        if (6 == baudrates->currentIndex())
+            tmpConnectStatus += QString::number(baudrates->currentText().toInt());
+        else
+            tmpConnectStatus += QString::number(baudrates->itemData(baudrates->currentIndex()).toInt());
+        tmpConnectStatus += "bps";
+
+        connectStatus->setText(tmpConnectStatus);
         connectStatus->setStyleSheet("color:green;font:12pt;border-style:outset;");
     }
     else
