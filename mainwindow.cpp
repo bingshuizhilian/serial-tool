@@ -5,7 +5,7 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    btnOpenClose(new QPushButton(tr("open serial port"))),
+    btnOpenClose(new QPushButton(tr("open port"))),
     labelTimeDisp(new QLabel),
     plntxtOutput(new QPlainTextEdit),
     datetime(new QDateTime),
@@ -132,16 +132,18 @@ MainWindow::MainWindow(QWidget *parent) :
     editSettingGroupBox->setLayout(layoutEditGroup);
 
     //buttons
-    auto layoutButtons = new QVBoxLayout;
-    btnOpenClose->setFixedHeight(30);
+    auto layoutButtons = new QGridLayout;
+    btnOpenClose->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Expanding);
     connect(btnOpenClose, &btnOpenClose->clicked, this, &on_openclosebutton_clicked);
-    layoutButtons->addWidget(btnOpenClose);
+    layoutButtons->addWidget(btnOpenClose, 0, 0, 2, 1);
     btnSave->setFixedHeight(30);
     connect(btnSave, &btnSave->clicked, this, &on_savebutton_clicked);
-    layoutButtons->addWidget(btnSave);
+    layoutButtons->addWidget(btnSave, 0, 1, 1, 1);
     btnClrScrn->setFixedHeight(30);
     connect(btnClrScrn, &btnClrScrn->clicked, this, &on_clrscrnbutton_clicked);
-    layoutButtons->addWidget(btnClrScrn);
+    layoutButtons->addWidget(btnClrScrn, 1, 1, 1, 1);
+
+
 
     //global left layout
     auto layoutLeft = new QVBoxLayout;
@@ -184,7 +186,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //additional initialization
     mySerialPort = new QSerialPort(this);
     hot_update_settings();
-    connect(mySerialPort, &QSerialPort::readyRead, this, &MainWindow::showserial);
+    connect(mySerialPort, &QSerialPort::readyRead, this, &MainWindow::receive_serial_data);
 }
 
 MainWindow::~MainWindow()
@@ -194,11 +196,11 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_openclosebutton_clicked(void)
 {
-    if(btnOpenClose->text() == tr("open serial port"))
+    if(btnOpenClose->text() == tr("open port"))
     {
         if(mySerialPort->open(QIODevice::ReadWrite))
         {
-            btnOpenClose->setText(tr("close serial port"));
+            btnOpenClose->setText(tr("close port"));
             btnSend->setEnabled(true);
         }
         else
@@ -206,10 +208,10 @@ void MainWindow::on_openclosebutton_clicked(void)
             QMessageBox::critical(this, tr("Error"), tr("Cannot open now!"));
         }
     }
-    else if(btnOpenClose->text() == tr("close serial port"))
+    else if(btnOpenClose->text() == tr("close port"))
     {
         mySerialPort->close();
-        btnOpenClose->setText(tr("open serial port"));
+        btnOpenClose->setText(tr("open port"));
         btnSend->setEnabled(false);
     }
 
@@ -272,7 +274,7 @@ void MainWindow::on_sendbutton_clicked(void)
             sendbytecounter += 1;
         }
 
-        QString sendBytesString = "S:0";
+        QString sendBytesString = "S:";
         sendBytesString += QString::number(sendbytecounter);
         labelSendBytes->setText(sendBytesString);
     }
@@ -283,18 +285,24 @@ void MainWindow::showtime(void)
     labelTimeDisp->setText(datetime->currentDateTime().toString("yyyy/MM/dd  HH:mm:ss"));
 }
 
-void MainWindow::showserial(void)
+void MainWindow::receive_serial_data(void)
 {
     QByteArray receiveData = mySerialPort->readAll();
 
     if(showhex->isChecked())
     {
         QString hexStream(receiveData.toHex());
+
+        for(qint32 iter = 0; iter < receiveData.length(); ++iter)
+        {
+            hexStream.insert(2 + 3 * iter, " ");
+        }
+
         plntxtOutput->insertPlainText(hexStream.toUpper());
     }
     else
     {
-        plntxtOutput->insertPlainText(QString(receiveData));
+        plntxtOutput->insertPlainText(receiveData);
     }
 
     QTextCursor cursor = plntxtOutput->textCursor();
@@ -302,7 +310,7 @@ void MainWindow::showserial(void)
     plntxtOutput->setTextCursor(cursor);
 
     receivebytecounter += receiveData.length();
-    QString receiveBytesString = "R:0";
+    QString receiveBytesString = "R:";
     receiveBytesString += QString::number(receivebytecounter);
     labelReceiveBytes->setText(receiveBytesString);
 }
@@ -347,7 +355,7 @@ void MainWindow::hot_update_settings(void)
     plntxtOutput->setPalette(plt);
     leInput->setPalette(plt);
 
-    if(btnOpenClose->text() == tr("close serial port"))
+    if(btnOpenClose->text() == tr("close port"))
     {
         connectStatus->setText("connected");
         connectStatus->setStyleSheet("color:green;font:12pt;border-style:outset;");
@@ -361,10 +369,10 @@ void MainWindow::hot_update_settings(void)
 
 void MainWindow::update_settings_caused_by_choosecoms(void)
 {
-    if(btnOpenClose->text() == tr("close serial port"))
+    if(btnOpenClose->text() == tr("close port"))
     {
         mySerialPort->close();
-        btnOpenClose->setText(tr("open serial port"));
+        btnOpenClose->setText(tr("open port"));
 
         connectStatus->setText("disconnected");
         connectStatus->setStyleSheet("color:gray;font:12pt;border-style:outset;");
