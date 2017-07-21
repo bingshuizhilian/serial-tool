@@ -53,8 +53,12 @@ MainWindow::MainWindow(QWidget *parent) :
     //port name
     auto layoutPortGroupBox = new QGridLayout;
     const auto infos = QSerialPortInfo::availablePorts();
-    for(auto &info : infos) choosecoms->addItem(info.portName(), info.portName());
-    connect(choosecoms,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &update_settings_caused_by_choosecoms);
+    for(auto &info : infos)
+    {
+        choosecoms->addItem(info.portName(), info.portName());
+        comNameList.push_back(info.portName());
+    }
+    connect(choosecoms,  static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentTextChanged), this, &proc_change_coms);
     auto labelCom = new QLabel(tr("Com name"));
     layoutPortGroupBox->addWidget(labelCom, 0, 0);
     layoutPortGroupBox->addWidget(choosecoms, 0, 1);
@@ -211,6 +215,11 @@ MainWindow::MainWindow(QWidget *parent) :
     RTCtimer->start(1000);
     showtime();
 
+    //com monitor timer
+    QTimer *comMonitorTimer = new QTimer(this);
+    connect(comMonitorTimer, SIGNAL(timeout()), this, SLOT(com_monitor()));
+    comMonitorTimer->start(500);
+
     //additional initialization
     mySerialPort = new QSerialPort(this);
     hot_update_settings();
@@ -220,6 +229,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    this->close_serial_port();
     delete ui;
 }
 
@@ -227,21 +237,11 @@ void MainWindow::on_openclosebutton_clicked(void)
 {
     if(btnOpenClose->text() == tr("open"))
     {
-        if(mySerialPort->open(QIODevice::ReadWrite))
-        {
-            btnOpenClose->setText(tr("close"));
-            btnSend->setEnabled(true);
-        }
-        else
-        {
-            QMessageBox::critical(this, tr("Error"), tr("Cannot open now!"));
-        }
+        this->open_serial_port();
     }
     else if(btnOpenClose->text() == tr("close"))
     {
-        mySerialPort->close();
-        btnOpenClose->setText(tr("open"));
-        btnSend->setEnabled(false);
+        this->close_serial_port();
     }
 
     hot_update_settings();
@@ -312,6 +312,48 @@ void MainWindow::on_sendbutton_clicked(void)
 void MainWindow::showtime(void)
 {
     labelTimeDisp->setText(datetime->currentDateTime().toString("yyyy/MM/dd  HH:mm:ss"));
+}
+
+void MainWindow::com_monitor(void)
+{
+    QStringList oldComNameList = comNameList;
+    QStringList newComNameList;
+
+    const auto infos = QSerialPortInfo::availablePorts();
+    comNameList.clear();
+    for(auto &info : infos) comNameList.push_back(info.portName());
+    newComNameList = comNameList;
+
+    if(oldComNameList.size() < newComNameList.size())
+    {
+        QString selectComName = choosecoms->currentText();
+
+        foreach(auto s, oldComNameList) newComNameList.removeOne(s);
+        foreach(auto s, newComNameList) choosecoms->addItem(s, s);
+
+        choosecoms->update();
+    }
+    else if(oldComNameList.size() > newComNameList.size())
+    {
+        qint32 tmpIndex = -1;
+
+        if(-1 == newComNameList.indexOf(choosecoms->currentText()))
+        {
+            if(0 != choosecoms->count())
+                choosecoms->setCurrentIndex(0);
+        }
+
+        foreach(auto s, newComNameList) oldComNameList.removeOne(s);
+
+        foreach(auto s, oldComNameList)
+        {
+            tmpIndex = choosecoms->findText(s);
+            if(-1 != tmpIndex)
+                choosecoms->removeItem(tmpIndex);
+        }
+
+        choosecoms->update();
+    }
 }
 
 void MainWindow::receive_serial_data(void)
@@ -405,18 +447,13 @@ void MainWindow::hot_update_settings(void)
     }
 }
 
-void MainWindow::update_settings_caused_by_choosecoms(void)
+void MainWindow::proc_change_coms(void)
 {
-    if(btnOpenClose->text() == tr("close"))
+    if(!choosecoms->currentText().isEmpty())
     {
-        mySerialPort->close();
-        btnOpenClose->setText(tr("open"));
-
-        connectStatus->setText("disconnected");
-        connectStatus->setStyleSheet("color:gray;font:12pt;border-style:outset;");
+        this->close_serial_port();
+        this->hot_update_settings();
     }
-
-    mySerialPort->setPortName(choosecoms->itemData(choosecoms->currentIndex()).toString());
 }
 
 void MainWindow::proc_sendhex_stateChanged(void)
@@ -480,4 +517,24 @@ void MainWindow::on_autosendtimer_timeout(void)
             leAutoSendCounter->setText(QString::number(leAutoSendCounter->text().toInt() - 1));
         }
     }
+}
+
+void MainWindow::open_serial_port(void)
+{
+    if(mySerialPort->open(QIODevice::ReadWrite))
+    {
+        btnOpenClose->setText(tr("close"));
+        btnSend->setEnabled(true);
+    }
+    else
+    {
+        QMessageBox::critical(this, tr("Error"), tr("Cannot open now!"));
+    }
+}
+
+void MainWindow::close_serial_port(void)
+{
+    mySerialPort->close();
+    btnOpenClose->setText(tr("open"));
+    btnSend->setEnabled(false);
 }
