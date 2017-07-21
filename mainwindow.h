@@ -67,19 +67,24 @@ private:
     QLineEdit* leAutoSendInterval;
     QLineEdit* leAutoSendCounter;
     QTimer *autoSendTimer;
+    QStringList comNameList;
 
 private slots:
     void on_openclosebutton_clicked(void);
     void showtime(void);
     void receive_serial_data(void);
     void hot_update_settings(void);
-    void update_settings_caused_by_choosecoms(void);
+    void proc_change_coms(void);
     void on_clrscrnbutton_clicked(void);
     void on_savebutton_clicked(void);
     void on_sendbutton_clicked(void);
     void proc_sendhex_stateChanged(void);
     void proc_autosend_stateChanged(void);
     void on_autosendtimer_timeout(void);
+    void com_monitor(void);
+private:
+    void open_serial_port(void);
+    void close_serial_port(void);
 };
 
 #endif // MAINWINDOW_H
