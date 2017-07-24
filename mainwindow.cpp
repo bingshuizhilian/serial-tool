@@ -58,7 +58,7 @@ MainWindow::MainWindow(QWidget *parent) :
         choosecoms->addItem(info.portName(), info.portName());
         comNameList.push_back(info.portName());
     }
-    connect(choosecoms,  static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentTextChanged), this, &proc_change_coms);
+    connect(choosecoms,  static_cast<void (QComboBox::*)(const QString&)>(&QComboBox::currentTextChanged), this, &procPortChanged);
     auto labelCom = new QLabel(tr("Com name"));
     layoutPortGroupBox->addWidget(labelCom, 0, 0);
     layoutPortGroupBox->addWidget(choosecoms, 0, 1);
@@ -72,8 +72,8 @@ MainWindow::MainWindow(QWidget *parent) :
     baudrates->addItem(tr("Custom"));
     baudrates->setCurrentIndex(4);
     baudrates->setInsertPolicy(QComboBox::NoInsert);
-    connect(baudrates,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hot_update_settings);
-    connect(baudrates,  &QComboBox::editTextChanged, this, &hot_update_settings);
+    connect(baudrates,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hotUpdateSettings);
+    connect(baudrates,  &QComboBox::editTextChanged, this, &hotUpdateSettings);
     auto labelBaudrate = new QLabel(tr("Baudrate"));
     layoutPortGroupBox->addWidget(labelBaudrate, 1, 0);
     layoutPortGroupBox->addWidget(baudrates, 1, 1);
@@ -83,7 +83,7 @@ MainWindow::MainWindow(QWidget *parent) :
     databits->addItem(QStringLiteral("7"), QSerialPort::Data7);
     databits->addItem(QStringLiteral("8"), QSerialPort::Data8);
     databits->setCurrentIndex(3);
-    connect(databits,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hot_update_settings);
+    connect(databits,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hotUpdateSettings);
     auto labelDatabits = new QLabel(tr("Data bits"));
     layoutPortGroupBox->addWidget(labelDatabits, 2, 0);
     layoutPortGroupBox->addWidget(databits, 2, 1);
@@ -93,7 +93,7 @@ MainWindow::MainWindow(QWidget *parent) :
     parity->addItem(tr("Odd"), QSerialPort::OddParity);
     parity->addItem(tr("Mark"), QSerialPort::MarkParity);
     parity->addItem(tr("Space"), QSerialPort::SpaceParity);
-    connect(parity,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hot_update_settings);
+    connect(parity,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hotUpdateSettings);
     auto labelParity = new QLabel(tr("Parity"));
     layoutPortGroupBox->addWidget(labelParity, 3, 0);
     layoutPortGroupBox->addWidget(parity, 3, 1);
@@ -101,7 +101,7 @@ MainWindow::MainWindow(QWidget *parent) :
     stopbits->addItem(QStringLiteral("1"), QSerialPort::OneStop);
     stopbits->addItem(tr("1.5"), QSerialPort::OneAndHalfStop);
     stopbits->addItem(QStringLiteral("2"), QSerialPort::TwoStop);
-    connect(stopbits,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hot_update_settings);
+    connect(stopbits,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hotUpdateSettings);
     auto labelStopbits = new QLabel(tr("Stop bits"));
     layoutPortGroupBox->addWidget(labelStopbits, 4, 0);
     layoutPortGroupBox->addWidget(stopbits, 4, 1);
@@ -109,14 +109,14 @@ MainWindow::MainWindow(QWidget *parent) :
     flowcontrol->addItem(tr("None"), QSerialPort::NoFlowControl);
     flowcontrol->addItem(tr("RTS/CTS"), QSerialPort::HardwareControl);
     flowcontrol->addItem(tr("XON/XOFF"), QSerialPort::SoftwareControl);
-    connect(flowcontrol,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hot_update_settings);
+    connect(flowcontrol,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hotUpdateSettings);
     auto labelFlowcontrol = new QLabel(tr("Flow ctrl"));
     layoutPortGroupBox->addWidget(labelFlowcontrol, 5, 0);
     layoutPortGroupBox->addWidget(flowcontrol, 5, 1);
     //theme
     pltBox->addItem(QStringLiteral("light"));
     pltBox->addItem(QStringLiteral("dark"));
-    connect(pltBox,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hot_update_settings);
+    connect(pltBox,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hotUpdateSettings);
     auto labelTheme = new QLabel(tr("Theme"));
     layoutPortGroupBox->addWidget(labelTheme, 6, 0);
     layoutPortGroupBox->addWidget(pltBox, 6, 1);
@@ -129,7 +129,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //edit and display
     auto layoutEditGroupBox = new QGridLayout;
     layoutEditGroupBox->addWidget(showhex, 0, 0);
-    connect(sendhex, &sendhex->stateChanged, this, &proc_sendhex_stateChanged);
+    connect(sendhex, &sendhex->stateChanged, this, &procSendhexStateChanged);
     layoutEditGroupBox->addWidget(sendhex, 0, 1);
     layoutEditGroupBox->addWidget(send0D, 1, 0);
     layoutEditGroupBox->addWidget(send0A, 1, 1);
@@ -141,7 +141,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //auto send
     auto layoutAutoSendGroupBox = new QGridLayout;
     layoutAutoSendGroupBox->addWidget(autosend, 0, 0);
-    connect(autosend, &autosend->stateChanged, this, &proc_autosend_stateChanged);
+    connect(autosend, &autosend->stateChanged, this, &procAutosendStateChanged);
     leAutoSendInterval->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
     leAutoSendInterval->setFixedWidth(30);
     layoutAutoSendGroupBox->addWidget(leAutoSendInterval, 0, 1);
@@ -167,13 +167,13 @@ MainWindow::MainWindow(QWidget *parent) :
     auto layoutButtons = new QGridLayout;
     QSize btnSize(50, 30);
     btnOpenClose->setFixedSize(btnSize);
-    connect(btnOpenClose, &btnOpenClose->clicked, this, &on_openclosebutton_clicked);
+    connect(btnOpenClose, &btnOpenClose->clicked, this, &procOpenCloseButtonClicked);
     layoutButtons->addWidget(btnOpenClose, 0, 0);
     btnSave->setFixedSize(btnSize);
-    connect(btnSave, &btnSave->clicked, this, &on_savebutton_clicked);
+    connect(btnSave, &btnSave->clicked, this, &procSaveButtonClicked);
     layoutButtons->addWidget(btnSave, 0, 1);
     btnClrScrn->setFixedSize(btnSize);
-    connect(btnClrScrn, &btnClrScrn->clicked, this, &on_clrscrnbutton_clicked);
+    connect(btnClrScrn, &btnClrScrn->clicked, this, &procClrScrnButtonClicked);
     layoutButtons->addWidget(btnClrScrn, 0, 2);
 
     //global left layout
@@ -190,11 +190,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //sub layout of global right layout
     auto layoutRightSubInput = new QHBoxLayout;
-    connect(leInput, &leInput->returnPressed, this, &on_sendbutton_clicked);
+    connect(leInput, &leInput->returnPressed, this, &procSendButtonClicked);
     layoutRightSubInput->addWidget(leInput);
     btnSend->setFixedWidth(40);
     btnSend->setEnabled(false);
-    connect(btnSend, &btnSend->clicked, this, &on_sendbutton_clicked);
+    connect(btnSend, &btnSend->clicked, this, &procSendButtonClicked);
     layoutRightSubInput->addWidget(btnSend);
     layoutRight->addLayout(layoutRightSubInput);
 
@@ -211,43 +211,43 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //clock timer
     QTimer *RTCtimer = new QTimer(this);
-    connect(RTCtimer, SIGNAL(timeout()), this, SLOT(showtime()));
+    connect(RTCtimer, SIGNAL(timeout()), this, SLOT(showTime()));
     RTCtimer->start(1000);
-    showtime();
+    showTime();
 
     //com monitor timer
     QTimer *comMonitorTimer = new QTimer(this);
-    connect(comMonitorTimer, SIGNAL(timeout()), this, SLOT(com_monitor()));
+    connect(comMonitorTimer, SIGNAL(timeout()), this, SLOT(portMonitor()));
     comMonitorTimer->start(500);
 
     //additional initialization
     mySerialPort = new QSerialPort(this);
-    hot_update_settings();
-    connect(mySerialPort, &QSerialPort::readyRead, this, &MainWindow::receive_serial_data);
-    connect(autoSendTimer, SIGNAL(timeout()), this, SLOT(on_autosendtimer_timeout()));
+    hotUpdateSettings();
+    connect(mySerialPort, &QSerialPort::readyRead, this, &MainWindow::receiveSerialData);
+    connect(autoSendTimer, SIGNAL(timeout()), this, SLOT(procAutosendTimerTimeout()));
 }
 
 MainWindow::~MainWindow()
 {
-    this->close_serial_port();
+    this->closeSerialPort();
     delete ui;
 }
 
-void MainWindow::on_openclosebutton_clicked(void)
+void MainWindow::procOpenCloseButtonClicked(void)
 {
     if(btnOpenClose->text() == tr("open"))
     {
-        this->open_serial_port();
+        this->openSerialPort();
     }
     else if(btnOpenClose->text() == tr("close"))
     {
-        this->close_serial_port();
+        this->closeSerialPort();
     }
 
-    hot_update_settings();
+    hotUpdateSettings();
 }
 
-void MainWindow::on_clrscrnbutton_clicked(void)
+void MainWindow::procClrScrnButtonClicked(void)
 {
     plntxtOutput->clear();
     sendbytecounter = 0;
@@ -256,7 +256,7 @@ void MainWindow::on_clrscrnbutton_clicked(void)
     labelReceiveBytes->setText(tr("R:0"));
 }
 
-void MainWindow::on_savebutton_clicked(void)
+void MainWindow::procSaveButtonClicked(void)
 {
     QString folderName = "/savedfiles/";
     QString dirPath = QDir::currentPath() + folderName;
@@ -275,7 +275,7 @@ void MainWindow::on_savebutton_clicked(void)
     file.close();
 }
 
-void MainWindow::on_sendbutton_clicked(void)
+void MainWindow::procSendButtonClicked(void)
 {
     QString inputString = leInput->text();
 
@@ -309,12 +309,12 @@ void MainWindow::on_sendbutton_clicked(void)
     }
 }
 
-void MainWindow::showtime(void)
+void MainWindow::showTime(void)
 {
     labelTimeDisp->setText(datetime->currentDateTime().toString("yyyy/MM/dd  HH:mm:ss"));
 }
 
-void MainWindow::com_monitor(void)
+void MainWindow::portMonitor(void)
 {
     QStringList oldComNameList = comNameList;
     QStringList newComNameList;
@@ -356,7 +356,7 @@ void MainWindow::com_monitor(void)
     }
 }
 
-void MainWindow::receive_serial_data(void)
+void MainWindow::receiveSerialData(void)
 {
     QByteArray receiveData = mySerialPort->readAll();
 
@@ -386,7 +386,7 @@ void MainWindow::receive_serial_data(void)
     labelReceiveBytes->setText(receiveBytesString);
 }
 
-void MainWindow::hot_update_settings(void)
+void MainWindow::hotUpdateSettings(void)
 {
     if (6 == baudrates->currentIndex())
     {
@@ -447,16 +447,16 @@ void MainWindow::hot_update_settings(void)
     }
 }
 
-void MainWindow::proc_change_coms(void)
+void MainWindow::procPortChanged(void)
 {
     if(!choosecoms->currentText().isEmpty())
     {
-        this->close_serial_port();
-        this->hot_update_settings();
+        this->closeSerialPort();
+        this->hotUpdateSettings();
     }
 }
 
-void MainWindow::proc_sendhex_stateChanged(void)
+void MainWindow::procSendhexStateChanged(void)
 {
     leInput->clear();
 
@@ -472,13 +472,13 @@ void MainWindow::proc_sendhex_stateChanged(void)
     }
 }
 
-void MainWindow::proc_autosend_stateChanged(void)
+void MainWindow::procAutosendStateChanged(void)
 {
     if(autosend->isChecked())
     {
         autoSendTimer->start();
         autoSendTimer->setInterval(leAutoSendInterval->text().toInt());
-        this->on_autosendtimer_timeout();
+        this->procAutosendTimerTimeout();
         if("0" == leAutoSendCounter->text())
         {
             leAutoSendCounter->setText(tr("∞"));
@@ -498,11 +498,11 @@ void MainWindow::proc_autosend_stateChanged(void)
     }
 }
 
-void MainWindow::on_autosendtimer_timeout(void)
+void MainWindow::procAutosendTimerTimeout(void)
 {
     if(mySerialPort->isOpen() && !leInput->text().isEmpty())
     {
-        this->on_sendbutton_clicked();
+        this->procSendButtonClicked();
 
         if("1" == leAutoSendCounter->text() && !leAutoSendCounter->isEnabled())
         {
@@ -519,7 +519,7 @@ void MainWindow::on_autosendtimer_timeout(void)
     }
 }
 
-void MainWindow::open_serial_port(void)
+void MainWindow::openSerialPort(void)
 {
     if(mySerialPort->open(QIODevice::ReadWrite))
     {
@@ -532,7 +532,7 @@ void MainWindow::open_serial_port(void)
     }
 }
 
-void MainWindow::close_serial_port(void)
+void MainWindow::closeSerialPort(void)
 {
     mySerialPort->close();
     btnOpenClose->setText(tr("open"));
