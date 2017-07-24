@@ -70,21 +70,21 @@ private:
     QStringList comNameList;
 
 private slots:
-    void on_openclosebutton_clicked(void);
-    void showtime(void);
-    void receive_serial_data(void);
-    void hot_update_settings(void);
-    void proc_change_coms(void);
-    void on_clrscrnbutton_clicked(void);
-    void on_savebutton_clicked(void);
-    void on_sendbutton_clicked(void);
-    void proc_sendhex_stateChanged(void);
-    void proc_autosend_stateChanged(void);
-    void on_autosendtimer_timeout(void);
-    void com_monitor(void);
+    void procOpenCloseButtonClicked(void);
+    void showTime(void);
+    void receiveSerialData(void);
+    void hotUpdateSettings(void);
+    void procPortChanged(void);
+    void procClrScrnButtonClicked(void);
+    void procSaveButtonClicked(void);
+    void procSendButtonClicked(void);
+    void procSendhexStateChanged(void);
+    void procAutosendStateChanged(void);
+    void procAutosendTimerTimeout(void);
+    void portMonitor(void);
 private:
-    void open_serial_port(void);
-    void close_serial_port(void);
+    void openSerialPort(void);
+    void closeSerialPort(void);
 };
 
 #endif // MAINWINDOW_H
