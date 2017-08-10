@@ -38,6 +38,10 @@ public:
 private:
     Ui::MainWindow *ui;
 
+    const static int WINDOW_ORIGNAL_WIDTH = 660;
+    const static int WINDOW_EXTRA_WIDTH = 360;
+    const static int EXTRA_ITEM_NUMBER = 10;
+
     QPushButton* btnOpenClose;
     QLabel* labelTimeDisp;
     QPlainTextEdit* plntxtOutput;
@@ -68,6 +72,14 @@ private:
     QLineEdit* leAutoSendCounter;
     QTimer *autoSendTimer;
     QStringList comNameList;
+    QGroupBox* exInputGroup;
+    QCheckBox* exAutosend;
+    QLineEdit* exLeAutosendInterval;
+    QTimer *exAutosendTimer;
+    qint32 whichExContentIsToBeSent;
+    QList<QCheckBox*> exHexCheckBoxs;
+    QList<QLineEdit*> exLeInputs;
+    QList<QPushButton*> exSendBtns;
 
 private slots:
     void procOpenCloseButtonClicked(void);
@@ -82,9 +94,17 @@ private slots:
     void procAutosendStateChanged(void);
     void procAutosendTimerTimeout(void);
     void portMonitor(void);
+    void procQuickCommand(void);
+    void procExSendButtonClicked(int btd_id);
+    void procExHexButtonClicked(int btd_id);
+    void procExAutosendStateChanged(void);
+    void procExAutosendTimerTimeout(void);
 private:
     void openSerialPort(void);
     void closeSerialPort(void);
+    void showHelpInfo(void);
+    void exInputGroupInitialization(void);
+    void componentsInitialization(void);
 };
 
 #endif // MAINWINDOW_H
