@@ -4,37 +4,12 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    btnOpenClose(new QPushButton(tr("open"))),
-    labelTimeDisp(new QLabel),
-    plntxtOutput(new QPlainTextEdit),
-    datetime(new QDateTime),
-    choosecoms(new QComboBox),
-    baudrates(new QComboBox),
-    databits(new QComboBox),
-    stopbits(new QComboBox),
-    parity(new QComboBox),
-    flowcontrol(new QComboBox),
-    btnClrScrn(new QPushButton(tr("clear"))),
-    pltBox(new QComboBox),
-    btnSave(new QPushButton(tr("save"))),
-    connectStatus(new QPushButton(tr("disconnected"))),
-    leInput(new QLineEdit),
-    btnSend(new QPushButton(tr("send"))),
-    send0D(new QCheckBox(tr("add 0x0D"))),
-    send0A(new QCheckBox(tr("add 0x0A"))),
-    showhex(new QCheckBox(tr("show hex"))),
-    sendhex(new QCheckBox(tr("send hex"))),
-    sendbytecounter(0),
-    receivebytecounter(0),
-    labelSendBytes(new QLabel(tr("S:0"))),
-    labelReceiveBytes(new QLabel(tr("R:0"))),
-    autosend(new QCheckBox(tr("on"))),
-    leAutoSendInterval(new QLineEdit),
-    leAutoSendCounter(new QLineEdit),
-    autoSendTimer(new QTimer)
+    ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    //component initialization
+    componentsInitialization();
 
     //status bar
     ui->statusBar->addWidget(labelTimeDisp);
@@ -145,16 +120,14 @@ MainWindow::MainWindow(QWidget *parent) :
     leAutoSendInterval->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
     leAutoSendInterval->setFixedWidth(30);
     layoutAutoSendGroupBox->addWidget(leAutoSendInterval, 0, 1);
-    auto autoSendIntervalValidator = new QIntValidator(0, 3600000);
-    leAutoSendInterval->setValidator(autoSendIntervalValidator);
+    leAutoSendInterval->setValidator(new QIntValidator(1, 1000*60*60*24));
     leAutoSendInterval->setText("1000");
     auto labelAutoSendInterval = new QLabel(tr("ms"));
     layoutAutoSendGroupBox->addWidget(labelAutoSendInterval, 0, 2);
     leAutoSendCounter->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
     leAutoSendCounter->setFixedWidth(30);
     layoutAutoSendGroupBox->addWidget(leAutoSendCounter, 0, 3);
-    auto autoSendCounterValidator = new QIntValidator(0, 9999999);
-    leAutoSendCounter->setValidator(autoSendCounterValidator);
+    leAutoSendCounter->setValidator(new QIntValidator(0, 99999999));
     leAutoSendCounter->setText("0");
     auto labelAutoSendCounter = new QLabel(tr("times"));
     layoutAutoSendGroupBox->addWidget(labelAutoSendCounter, 0, 4);
@@ -191,6 +164,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //sub layout of global right layout
     auto layoutRightSubInput = new QHBoxLayout;
     connect(leInput, &leInput->returnPressed, this, &procSendButtonClicked);
+    connect(leInput, &leInput->returnPressed, this, &procQuickCommand);
     layoutRightSubInput->addWidget(leInput);
     btnSend->setFixedWidth(40);
     btnSend->setEnabled(false);
@@ -198,15 +172,20 @@ MainWindow::MainWindow(QWidget *parent) :
     layoutRightSubInput->addWidget(btnSend);
     layoutRight->addLayout(layoutRightSubInput);
 
+    //extra right input layout
+    exInputGroup->hide();
+    exInputGroupInitialization();
+
     //global layout
     auto layoutGlobal = new QHBoxLayout;
     layoutGlobal->addLayout(layoutLeft);
     layoutGlobal->addLayout(layoutRight);
+    layoutGlobal->addWidget(exInputGroup);
     ui->centralWidget->setLayout(layoutGlobal);
 
     //resize the main window
     QSize size = this->size();
-    size.setWidth(600);
+    size.setWidth(WINDOW_ORIGNAL_WIDTH);
     this->resize(size);
 
     //clock timer
@@ -231,6 +210,43 @@ MainWindow::~MainWindow()
 {
     this->closeSerialPort();
     delete ui;
+}
+
+void MainWindow::componentsInitialization(void)
+{
+    btnOpenClose = new QPushButton(tr("open"));
+    labelTimeDisp = new QLabel;
+    plntxtOutput = new QPlainTextEdit;
+    datetime = new QDateTime;
+    choosecoms = new QComboBox;
+    baudrates = new QComboBox;
+    databits = new QComboBox;
+    stopbits = new QComboBox;
+    parity = new QComboBox;
+    flowcontrol = new QComboBox;
+    btnClrScrn = new QPushButton(tr("clear"));
+    pltBox = new QComboBox;
+    btnSave = new QPushButton(tr("save"));
+    connectStatus = new QPushButton(tr("disconnected"));
+    leInput = new QLineEdit;
+    btnSend = new QPushButton(tr("send"));
+    send0D = new QCheckBox(tr("add 0x0D"));
+    send0A = new QCheckBox(tr("add 0x0A"));
+    showhex = new QCheckBox(tr("show hex"));
+    sendhex = new QCheckBox(tr("send hex"));
+    sendbytecounter = 0;
+    receivebytecounter = 0;
+    labelSendBytes = new QLabel(tr("S:0"));
+    labelReceiveBytes = new QLabel(tr("R:0"));
+    autosend = new QCheckBox(tr("on"));
+    leAutoSendInterval = new QLineEdit;
+    leAutoSendCounter = new QLineEdit;
+    autoSendTimer = new QTimer;
+    exInputGroup = new QGroupBox(tr("extra send options"));
+    exAutosend = new QCheckBox(tr("loop to send each content with interval"));
+    exLeAutosendInterval = new QLineEdit;
+    exAutosendTimer = new QTimer;
+    whichExContentIsToBeSent = -1;
 }
 
 void MainWindow::procOpenCloseButtonClicked(void)
@@ -307,6 +323,213 @@ void MainWindow::procSendButtonClicked(void)
         sendBytesString += QString::number(sendbytecounter);
         labelSendBytes->setText(sendBytesString);
     }
+}
+
+void MainWindow::procQuickCommand(void)
+{
+    if(mySerialPort->isOpen())
+    {
+        return;
+    }
+
+    QString inputString = leInput->text();
+    QStringList sourceShowCmd = { ":show extra", ":se" };
+    QStringList sourceHideCmd = { ":hide extra", ":he" };
+
+    if((sourceShowCmd.at(0) == inputString.toLower() || sourceShowCmd.at(1) == inputString.toLower()) && exInputGroup->isHidden())
+    {
+        exInputGroup->show();
+
+        QSize size = this->size();
+        size.setWidth(WINDOW_ORIGNAL_WIDTH + WINDOW_EXTRA_WIDTH);
+        this->resize(size);
+
+//        qDebug()<< "extraInputGroup->width:" << extraInputGroup->width() << "\n";
+    }
+    else if((sourceHideCmd.at(0) == inputString.toLower() || sourceHideCmd.at(1) == inputString.toLower()) && !exInputGroup->isHidden())
+    {
+        exInputGroup->hide();
+
+        QSize size = this->size();
+        size.setWidth(WINDOW_ORIGNAL_WIDTH);
+        this->resize(size);
+
+//        qDebug() << "this->width:" << this->width() << "\n";
+    }
+    else if(inputString.isEmpty())
+    {
+        showHelpInfo();
+    }
+    else
+    {
+        //do nothing for now
+    }
+}
+
+void MainWindow::exInputGroupInitialization(void)
+{
+    exInputGroup->setFixedWidth(WINDOW_EXTRA_WIDTH);
+    auto extraMainlayout = new QGridLayout;
+
+    auto exAutoSendlayout = new QHBoxLayout;
+    connect(exAutosend, &autosend->stateChanged, this, &procExAutosendStateChanged);
+    exAutoSendlayout->addWidget(exAutosend);
+    exLeAutosendInterval->setFixedWidth(30);
+    exLeAutosendInterval->setValidator(new QIntValidator(3,1000*60*60*24));
+    exLeAutosendInterval->setText("1000");
+    exAutoSendlayout->addWidget(exLeAutosendInterval);
+    auto labelExAutoSendInterval = new QLabel(tr("ms"));
+    exAutoSendlayout->addWidget(labelExAutoSendInterval);
+
+    auto exAutoSendOptionsGroup = new QGroupBox;
+    exAutoSendOptionsGroup->setFixedHeight(40);
+    exAutoSendOptionsGroup->setLayout(exAutoSendlayout);
+    extraMainlayout->addWidget(exAutoSendOptionsGroup, 0, 0, 1, 3);
+
+    QList<QLabel*> exLabelGroups;
+    QStringList labelString = { "hex", "contents", "send" };
+    for(auto i = 0; i < 3; ++i)
+    {
+        exLabelGroups.push_back(new QLabel);
+        exLabelGroups[i]->setAlignment(Qt::AlignCenter);
+        exLabelGroups[i]->setText(labelString.at(i));
+        exLabelGroups[i]->setFixedHeight(12);
+        extraMainlayout->addWidget(exLabelGroups[i], 1, i);
+    }
+
+    auto hexBtnGroup = new QButtonGroup;
+    hexBtnGroup->setExclusive(false);
+    auto sendBtnGroup = new QButtonGroup;
+    for(auto i = 0; i < EXTRA_ITEM_NUMBER; ++i)
+    {
+        exHexCheckBoxs.push_back(new QCheckBox);
+        exHexCheckBoxs.at(i)->setFixedWidth(15);
+        hexBtnGroup->addButton(exHexCheckBoxs.at(i), i);
+        extraMainlayout->addWidget(exHexCheckBoxs.at(i), 2 + i, 0);
+
+        exLeInputs.push_back(new QLineEdit);
+        exLeInputs.at(i)->setFixedWidth(280);
+        extraMainlayout->addWidget(exLeInputs.at(i), 2 + i, 1);
+
+        exSendBtns.push_back(new QPushButton);
+        exSendBtns.at(i)->setText(QString::number(i + 1));
+        exSendBtns.at(i)->setFixedWidth(25);
+        exSendBtns.at(i)->setEnabled(false);
+        sendBtnGroup->addButton(exSendBtns.at(i), i);
+        extraMainlayout->addWidget(exSendBtns.at(i), 2 + i, 2);
+    }
+
+    exInputGroup->setLayout(extraMainlayout);
+    connect(exAutosendTimer, SIGNAL(timeout()), this, SLOT(procExAutosendTimerTimeout()));
+    connect(hexBtnGroup, SIGNAL(buttonClicked(int)), this, SLOT(procExHexButtonClicked(int)));
+    connect(sendBtnGroup, SIGNAL(buttonClicked(int)), this, SLOT(procExSendButtonClicked(int)));
+}
+
+void MainWindow::procExAutosendStateChanged(void)
+{
+    if(exAutosend->isChecked())
+    {
+        if("0" == exLeAutosendInterval->text())
+        {
+            exLeAutosendInterval->setText(tr("1"));
+        }
+
+        exLeAutosendInterval->setEnabled(false);
+        exAutosendTimer->setInterval(exLeAutosendInterval->text().toInt());
+        exAutosendTimer->start();
+        this->procExAutosendTimerTimeout();
+    }
+    else
+    {
+        exLeAutosendInterval->setEnabled(true);
+        exAutosendTimer->stop();
+        whichExContentIsToBeSent = -1;
+    }
+}
+
+void MainWindow::procExAutosendTimerTimeout(void)
+{
+    if(!mySerialPort->isOpen())
+    {
+        return;
+    }
+
+    do
+    {
+        ++whichExContentIsToBeSent;
+        whichExContentIsToBeSent %= EXTRA_ITEM_NUMBER;
+    }while(exLeInputs.at(whichExContentIsToBeSent)->text().isEmpty());
+
+    qDebug() << "whichExContentIsToBeSent" << whichExContentIsToBeSent << "\n";
+
+    if(!exLeInputs.at(whichExContentIsToBeSent)->text().isEmpty())
+    {
+        this->procExSendButtonClicked(whichExContentIsToBeSent);
+    }
+}
+
+void MainWindow::procExHexButtonClicked(int btd_id)
+{
+//    qDebug() << "btd_id" << btd_id << "\n";
+    exLeInputs.at(btd_id)->clear();
+
+    if(exHexCheckBoxs.at(btd_id)->isChecked())
+    {
+        QRegExp regex("[a-fA-F0-9 ]+$");
+        auto validator = new QRegExpValidator(regex, exLeInputs.at(btd_id));
+        exLeInputs.at(btd_id)->setValidator(validator);
+    }
+    else
+    {
+        exLeInputs.at(btd_id)->setValidator(0);
+    }
+}
+
+void MainWindow::procExSendButtonClicked(int btd_id)
+{
+//    qDebug() << "btd_id" << btd_id << "\n";
+    QString inputString = exLeInputs.at(btd_id)->text();
+
+    if(mySerialPort->isOpen())
+    {
+        if(exHexCheckBoxs.at(btd_id)->isChecked())
+        {
+            QByteArray hexDecoded = QByteArray::fromHex(inputString.toLatin1());
+            sendbytecounter += mySerialPort->write(hexDecoded);
+        }
+        else
+        {
+            sendbytecounter += mySerialPort->write(inputString.toLatin1());
+        }
+
+        if(send0D->isChecked())
+        {
+            mySerialPort->putChar(0x0D);
+            sendbytecounter += 1;
+        }
+
+        if(send0A->isChecked())
+        {
+            mySerialPort->putChar(0x0A);
+            sendbytecounter += 1;
+        }
+
+        QString sendBytesString = "S:";
+        sendBytesString += QString::number(sendbytecounter);
+        labelSendBytes->setText(sendBytesString);
+    }
+}
+
+void MainWindow::showHelpInfo(void)
+{
+    QStringList hlpInfo;
+
+    hlpInfo.push_back(tr("1.Welcome to use and spread this serial port tool!"));
+    hlpInfo.push_back(tr("2.Click contact author linkage at right corner for source code, or mail the author."));
+    hlpInfo.push_back(tr("3.Input :show extra or :se for extra features, and :hide extra or :he to hide them."));
+
+    foreach(auto elem, hlpInfo)
+        plntxtOutput->appendPlainText(elem);
 }
 
 void MainWindow::showTime(void)
@@ -425,6 +648,10 @@ void MainWindow::hotUpdateSettings(void)
     }
     plntxtOutput->setPalette(plt);
     leInput->setPalette(plt);
+    for(auto i = 0; i < EXTRA_ITEM_NUMBER; ++i)
+    {
+        exLeInputs.at(i)->setPalette(plt);
+    }
 
     if(btnOpenClose->text() == tr("close"))
     {
@@ -476,25 +703,34 @@ void MainWindow::procAutosendStateChanged(void)
 {
     if(autosend->isChecked())
     {
-        autoSendTimer->start();
-        autoSendTimer->setInterval(leAutoSendInterval->text().toInt());
-        this->procAutosendTimerTimeout();
+        if("0" == leAutoSendInterval->text())
+        {
+            leAutoSendInterval->setText(tr("1"));
+        }
+
         if("0" == leAutoSendCounter->text())
         {
             leAutoSendCounter->setText(tr("∞"));
         }
+
         leAutoSendInterval->setEnabled(false);
         leAutoSendCounter->setEnabled(false);
+
+        autoSendTimer->setInterval(leAutoSendInterval->text().toInt());
+        autoSendTimer->start();
+        this->procAutosendTimerTimeout(); 
     }
     else
     {
-        autoSendTimer->stop();
         if("∞" == leAutoSendCounter->text())
         {
             leAutoSendCounter->setText("0");
         }
+
         leAutoSendInterval->setEnabled(true);
         leAutoSendCounter->setEnabled(true);
+
+        autoSendTimer->stop();
     }
 }
 
@@ -525,6 +761,10 @@ void MainWindow::openSerialPort(void)
     {
         btnOpenClose->setText(tr("close"));
         btnSend->setEnabled(true);
+        for(auto i = 0; i < EXTRA_ITEM_NUMBER; ++i)
+        {
+            exSendBtns[i]->setEnabled(true);
+        }
     }
     else
     {
@@ -537,4 +777,8 @@ void MainWindow::closeSerialPort(void)
     mySerialPort->close();
     btnOpenClose->setText(tr("open"));
     btnSend->setEnabled(false);
+    for(auto i = 0; i < EXTRA_ITEM_NUMBER; ++i)
+    {
+        exSendBtns[i]->setEnabled(false);
+    }
 }
