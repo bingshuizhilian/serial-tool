@@ -19,7 +19,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->statusBar->addWidget(labelReceiveBytes);
     ui->mainToolBar->close();
     setWindowTitle(tr("serial port tool"));
-    auto labelAuthorInfo = new QLabel(tr("bingshuizhilian@yeah.net"));
+    auto labelAuthorInfo = new QLabel;
+    labelAuthorInfo->setStatusTip(tr("click to view my github for source code, or mail to bingshuizhilian@yeah.net to contact me"));
     labelAuthorInfo->setOpenExternalLinks(true);
     labelAuthorInfo->setText(QString::fromLocal8Bit("<style> a {text-decoration: none} </style> <a href = https://www.github.com/bingshuizhilian> contact author </a>"));
     labelAuthorInfo->show();
@@ -103,10 +104,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //edit and display
     auto layoutEditGroupBox = new QGridLayout;
+    showhex->setStatusTip(tr("display the following receive contents with hex decoded"));
     layoutEditGroupBox->addWidget(showhex, 0, 0);
     connect(sendhex, &sendhex->stateChanged, this, &procSendhexStateChanged);
+    sendhex->setStatusTip(tr("send hex coded contents"));
     layoutEditGroupBox->addWidget(sendhex, 0, 1);
+    send0D->setStatusTip(tr("add 0x0D at the end of your contents automatically, even if it's empty"));
     layoutEditGroupBox->addWidget(send0D, 1, 0);
+    send0A->setStatusTip(tr("add 0x0A at the end of your contents automatically, even if it's empty"));
     layoutEditGroupBox->addWidget(send0A, 1, 1);
 
     auto editSettingGroupBox = new QGroupBox;
@@ -115,6 +120,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //auto send
     auto layoutAutoSendGroupBox = new QGridLayout;
+    autosend->setStatusTip(tr("enable or disable auto send"));
     layoutAutoSendGroupBox->addWidget(autosend, 0, 0);
     connect(autosend, &autosend->stateChanged, this, &procAutosendStateChanged);
     leAutoSendInterval->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
@@ -123,6 +129,7 @@ MainWindow::MainWindow(QWidget *parent) :
     leAutoSendInterval->setValidator(new QIntValidator(1, 1000*60*60*24));
     leAutoSendInterval->setText("1000");
     auto labelAutoSendInterval = new QLabel(tr("ms"));
+    labelAutoSendInterval->setStatusTip(tr("set send frequency, range 1ms-1day"));
     layoutAutoSendGroupBox->addWidget(labelAutoSendInterval, 0, 2);
     leAutoSendCounter->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
     leAutoSendCounter->setFixedWidth(30);
@@ -130,6 +137,7 @@ MainWindow::MainWindow(QWidget *parent) :
     leAutoSendCounter->setValidator(new QIntValidator(0, 99999999));
     leAutoSendCounter->setText("0");
     auto labelAutoSendCounter = new QLabel(tr("times"));
+    labelAutoSendCounter->setStatusTip(tr("set how many times you want to send, range 0-99999999, 0 for infinate"));
     layoutAutoSendGroupBox->addWidget(labelAutoSendCounter, 0, 4);
 
     auto autoSendGroupBox = new QGroupBox;
@@ -140,12 +148,15 @@ MainWindow::MainWindow(QWidget *parent) :
     auto layoutButtons = new QGridLayout;
     QSize btnSize(50, 30);
     btnOpenClose->setFixedSize(btnSize);
+    btnOpenClose->setStatusTip(tr("open or close the selected serial port"));
     connect(btnOpenClose, &btnOpenClose->clicked, this, &procOpenCloseButtonClicked);
     layoutButtons->addWidget(btnOpenClose, 0, 0);
     btnSave->setFixedSize(btnSize);
+    btnSave->setStatusTip(tr("save the current display contents to a timestamp-named file under the tool's path"));
     connect(btnSave, &btnSave->clicked, this, &procSaveButtonClicked);
     layoutButtons->addWidget(btnSave, 0, 1);
     btnClrScrn->setFixedSize(btnSize);
+    btnClrScrn->setStatusTip(tr("clear the display contents and send bytes counter and receive bytes counter"));
     connect(btnClrScrn, &btnClrScrn->clicked, this, &procClrScrnButtonClicked);
     layoutButtons->addWidget(btnClrScrn, 0, 2);
 
@@ -165,6 +176,7 @@ MainWindow::MainWindow(QWidget *parent) :
     auto layoutRightSubInput = new QHBoxLayout;
     connect(leInput, &leInput->returnPressed, this, &procSendButtonClicked);
     connect(leInput, &leInput->returnPressed, this, &procQuickCommand);
+    leInput->setStatusTip(tr("press enter without any input to view more"));
     layoutRightSubInput->addWidget(leInput);
     btnSend->setFixedWidth(40);
     btnSend->setEnabled(false);
@@ -524,9 +536,10 @@ void MainWindow::showHelpInfo(void)
 {
     QStringList hlpInfo;
 
-    hlpInfo.push_back(tr("1.Welcome to use and spread this serial port tool!"));
-    hlpInfo.push_back(tr("2.Click contact author linkage at right corner for source code, or mail the author."));
-    hlpInfo.push_back(tr("3.Input :show extra or :se for extra features, and :hide extra or :he to hide them."));
+    hlpInfo.push_back(tr("0.Welcome to use and spread this open source serial port tool."));
+    hlpInfo.push_back(tr("1.This tool is developed under Qt creator using QT5 in C++, thanks for QT's easy-use."));
+    hlpInfo.push_back(tr("2.Input :show extra or :se for extra features, and :hide extra or :he to hide them."));
+    hlpInfo.push_back(tr("3.Any good idea to improve this tool, click contact author."));
 
     foreach(auto elem, hlpInfo)
         plntxtOutput->appendPlainText(elem);
@@ -666,6 +679,9 @@ void MainWindow::hotUpdateSettings(void)
 
         connectStatus->setText(tmpConnectStatus);
         connectStatus->setStyleSheet("color:green;font:12pt;border-style:outset;");
+
+        if(!leInput->statusTip().isEmpty())
+            leInput->setStatusTip(tr(""));
     }
     else
     {
