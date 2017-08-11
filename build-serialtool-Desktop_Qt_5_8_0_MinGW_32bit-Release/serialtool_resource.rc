@@ -1,6 +1,6 @@
 #include <windows.h>
 
-IDI_ICON1	ICON	DISCARDABLE	"F:\\GitHub\\serial-tool\\source codes\\appicon2.ico"
+IDI_ICON1	ICON	DISCARDABLE	"F:\\GitHub\\serial-tool\\resources\\appicon2.ico"
 
 VS_VERSION_INFO VERSIONINFO
 	FILEVERSION 0,0,0,0
