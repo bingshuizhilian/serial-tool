@@ -90,12 +90,12 @@ MainWindow::MainWindow(QWidget *parent) :
     layoutPortGroupBox->addWidget(labelFlowcontrol, 5, 0);
     layoutPortGroupBox->addWidget(flowcontrol, 5, 1);
     //theme
-    pltBox->addItem(QStringLiteral("light"));
-    pltBox->addItem(QStringLiteral("dark"));
-    connect(pltBox,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hotUpdateSettings);
+    theme->addItem(QStringLiteral("light"));
+    theme->addItem(QStringLiteral("dark"));
+    connect(theme,  static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &hotUpdateSettings);
     auto labelTheme = new QLabel(tr("Theme"));
     layoutPortGroupBox->addWidget(labelTheme, 6, 0);
-    layoutPortGroupBox->addWidget(pltBox, 6, 1);
+    layoutPortGroupBox->addWidget(theme, 6, 1);
 
     //serial port setting related layout
     auto comSettingGroupBox = new QGroupBox;
@@ -237,7 +237,7 @@ void MainWindow::componentsInitialization(void)
     parity = new QComboBox;
     flowcontrol = new QComboBox;
     btnClrScrn = new QPushButton(tr("clear"));
-    pltBox = new QComboBox;
+    theme = new QComboBox;
     btnSave = new QPushButton(tr("save"));
     connectStatus = new QPushButton(tr("disconnected"));
     leInput = new QLineEdit;
@@ -297,7 +297,11 @@ void MainWindow::procSaveButtonClicked(void)
     QString fileName = "." + folderName + "savedfile_" + timeInfo + ".txt";
     QFile file(fileName);
     if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
+    {
+        QMessageBox::warning(this, "Warnning", "Cannot open " + fileName, QMessageBox::Yes);
         return;
+    }
+
     QTextStream out(&file);
     out << plntxtOutput->toPlainText();
     file.close();
@@ -348,6 +352,8 @@ void MainWindow::procQuickCommand(void)
     cmdList.push_back({ CMD_HELP, {":help", ":hlp", ":?"} });
     cmdList.push_back({ CMD_SHOW, {":show extra", ":se"} });
     cmdList.push_back({ CMD_HIDE, {":hide extra", ":he"} });
+    cmdList.push_back({ CMD_SAVE_CONFIG_FILE, {":save config file", ":scf", ":save"} });
+    cmdList.push_back({ CMD_LOAD_CONFIG_FILE, {":load config file", ":lcf", ":load"} });
     cmdList.push_back({ CMD_HYTERA_CUSTOMIZED, {":hytera customized", ":hc"} });
     cmdList.push_back({ CMD_HYTERA_CUSTOMIZED_AT, {":hytera at", ":ha"} });
     cmdList.push_back({ CMD_HYTERA_CUSTOMIZED_DIAL, {":hytera dial", ":hd"} });
@@ -375,7 +381,7 @@ void MainWindow::procQuickCommand(void)
     {
         if(exInputGroup->isHidden())
         {
-            showHelpInfo(CMD_HELP);
+            showHelpInfo(findCmd);
         }
         break;
     }
@@ -405,14 +411,17 @@ void MainWindow::procQuickCommand(void)
         }
         break;
     }
+    case CMD_SAVE_CONFIG_FILE:
+    case CMD_LOAD_CONFIG_FILE:
+    {
+        procConfigFile(findCmd);
+        break;
+    }
     case CMD_HYTERA_CUSTOMIZED:
     case CMD_HYTERA_CUSTOMIZED_AT:
     case CMD_HYTERA_CUSTOMIZED_DIAL:
     {
-        if(exInputGroup->isHidden())
-        {
-            showHelpInfo(findCmd);
-        }
+        showHelpInfo(findCmd);
         break;
     }
     default:
@@ -571,6 +580,62 @@ void MainWindow::procExSendButtonClicked(int btd_id)
         QString sendBytesString = "S:";
         sendBytesString += QString::number(sendbytecounter);
         labelSendBytes->setText(sendBytesString);
+    }
+}
+
+void MainWindow::procConfigFile(SERIAL_CMD_TYPE cmd)
+{
+//    qDebug() << "cmd" << QDir::currentPath() + CONFIG_FILE_NAME << "\n";
+//    plntxtOutput->appendPlainText(QDir::currentPath() + '/' + CONFIG_FILE_NAME);
+    if(CMD_SAVE_CONFIG_FILE == cmd)
+    {
+        QString fileName = QDir::currentPath() + '/' + SETTINGS_FILE_NAME;
+        QFile file(fileName);
+        if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            QMessageBox::warning(this, "Warnning", "Cannot open " + fileName, QMessageBox::Yes);
+            return;
+        }
+
+        QTextStream out(&file);
+        out << "[ComName]:" + choosecoms->currentText() + "\n";
+        out << "[Baudrate]:" + baudrates->currentText() + "\n";
+        out << "[DataBits]:" + databits->currentText() + "\n";
+        out << "[Parity]:" + parity->currentText() + "\n";
+        out << "[StopBits]:" + stopbits->currentText() + "\n";
+        out << "[FlowCtrl]:" + flowcontrol->currentText() + "\n";
+        out << "[Theme]:" + theme->currentText() + "\n";
+        out << "[EditSettings]:" + QString::number(showhex->isChecked()) + QString::number(sendhex->isChecked())
+               + QString::number(send0D->isChecked()) + QString::number(send0A->isChecked()) + "\n";
+
+        out << "[ExtraHexState]:";
+        for(auto i = 0; i < EXTRA_ITEM_NUMBER; ++i)
+        {
+            out << QString::number(exHexCheckBoxs.at(i)->isChecked());
+        }
+        out << "\n";
+        for(auto i = 0; i < EXTRA_ITEM_NUMBER; ++i)
+        {
+            out << "[ExtraInput" + QString::number(i) + "]:" + exLeInputs.at(i)->text() + "\n";
+        }
+
+        file.close();
+    }
+    else if(CMD_LOAD_CONFIG_FILE == cmd)
+    {
+        QString fileName = QDir::currentPath() + '/' + SETTINGS_FILE_NAME;
+        QFile file(fileName);
+        if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QMessageBox::warning(this, "Warnning", "Cannot open " + fileName, QMessageBox::Yes);
+            return;
+        }
+
+        QTextStream in(&file);
+
+        file.close();
+
+        this->hotUpdateSettings();
     }
 }
 
@@ -803,7 +868,7 @@ void MainWindow::hotUpdateSettings(void)
     mySerialPort->setFlowControl(static_cast<QSerialPort::FlowControl>(flowcontrol->itemData(flowcontrol->currentIndex()).toInt()));
 
     auto plt = plntxtOutput->palette();
-    switch(pltBox->currentIndex())
+    switch(theme->currentIndex())
     {
     case 0:
         plt.setColor(QPalette::Base, Qt::white);
