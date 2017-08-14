@@ -589,7 +589,7 @@ void MainWindow::procConfigFile(SERIAL_CMD_TYPE cmd)
 //    plntxtOutput->appendPlainText(QDir::currentPath() + '/' + CONFIG_FILE_NAME);
     if(CMD_SAVE_CONFIG_FILE == cmd)
     {
-        QString fileName = QDir::currentPath() + '/' + SETTINGS_FILE_NAME;
+        QString fileName = QDir::currentPath() + '/' + CONFIG_FILE_NAME;
         QFile file(fileName);
         if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
         {
@@ -623,7 +623,7 @@ void MainWindow::procConfigFile(SERIAL_CMD_TYPE cmd)
     }
     else if(CMD_LOAD_CONFIG_FILE == cmd)
     {
-        QString fileName = QDir::currentPath() + '/' + SETTINGS_FILE_NAME;
+        QString fileName = QDir::currentPath() + '/' + CONFIG_FILE_NAME;
         QFile file(fileName);
         if(!file.open(QIODevice::ReadOnly | QIODevice::Text))
         {
@@ -647,8 +647,10 @@ void MainWindow::showHelpInfo(SERIAL_CMD_TYPE cmd)
     {
         hlpInfo.push_back(tr("0.Welcome to use and spread this open source serial port tool."));
         hlpInfo.push_back(tr("1.This tool is developed under Qt creator using QT5 in C++, thanks for QT's easy-use."));
-        hlpInfo.push_back(tr("2.Input :show extra or :se for extra features, and :hide extra or :he to hide them."));
-        hlpInfo.push_back(tr("3.Any good idea to improve this tool, click contact author."));
+        hlpInfo.push_back(tr("2.Input :save config file or :scf or :save to save config file, "
+                             "and :load config file or or :lcf or :load to load config file."));
+        hlpInfo.push_back(tr("3.Input :show extra or :se for extra features, and :hide extra or :he to hide them."));
+        hlpInfo.push_back(tr("4.Any good idea to improve this tool, click contact author."));
     }
     else if(CMD_HYTERA_CUSTOMIZED == cmd)
     {
