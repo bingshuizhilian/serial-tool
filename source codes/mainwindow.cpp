@@ -176,7 +176,7 @@ MainWindow::MainWindow(QWidget *parent) :
     auto layoutRightSubInput = new QHBoxLayout;
     connect(leInput, &leInput->returnPressed, this, &procSendButtonClicked);
     connect(leInput, &leInput->returnPressed, this, &procQuickCommand);
-    leInput->setStatusTip(tr("press enter without any input to view more"));
+    leInput->setStatusTip(tr("press enter with input :? to view more"));
     layoutRightSubInput->addWidget(leInput);
     btnSend->setFixedWidth(40);
     btnSend->setEnabled(false);
@@ -344,37 +344,79 @@ void MainWindow::procQuickCommand(void)
         return;
     }
 
+    QList<QPair<SERIAL_CMD_TYPE, QStringList>> cmdList;
+    cmdList.push_back({ CMD_HELP, {":help", ":hlp", ":?"} });
+    cmdList.push_back({ CMD_SHOW, {":show extra", ":se"} });
+    cmdList.push_back({ CMD_HIDE, {":hide extra", ":he"} });
+    cmdList.push_back({ CMD_HYTERA_CUSTOMIZED, {":hytera customized", ":hc"} });
+    cmdList.push_back({ CMD_HYTERA_CUSTOMIZED_AT, {":hytera at", ":ha"} });
+    cmdList.push_back({ CMD_HYTERA_CUSTOMIZED_DIAL, {":hytera dial", ":hd"} });
+
     QString inputString = leInput->text();
-    QStringList sourceShowCmd = { ":show extra", ":se" };
-    QStringList sourceHideCmd = { ":hide extra", ":he" };
-
-    if((sourceShowCmd.at(0) == inputString.toLower() || sourceShowCmd.at(1) == inputString.toLower()) && exInputGroup->isHidden())
+    SERIAL_CMD_TYPE findCmd = CMD_NULL;
+    foreach(auto pairElem, cmdList)
     {
-        exInputGroup->show();
+        foreach(auto strListElem, pairElem.second)
+        {
+            if(!strListElem.compare(inputString, Qt::CaseInsensitive))
+            {
+                findCmd = pairElem.first;
+                break;
+            }
+        }
 
-        QSize size = this->size();
-        size.setWidth(WINDOW_ORIGNAL_WIDTH + WINDOW_EXTRA_WIDTH);
-        this->resize(size);
-
-//        qDebug()<< "extraInputGroup->width:" << extraInputGroup->width() << "\n";
+        if(CMD_NULL != findCmd)
+            break;
     }
-    else if((sourceHideCmd.at(0) == inputString.toLower() || sourceHideCmd.at(1) == inputString.toLower()) && !exInputGroup->isHidden())
-    {
-        exInputGroup->hide();
 
-        QSize size = this->size();
-        size.setWidth(WINDOW_ORIGNAL_WIDTH);
-        this->resize(size);
+    switch(findCmd)
+    {
+    case CMD_HELP:
+    {
+        if(exInputGroup->isHidden())
+        {
+            showHelpInfo(CMD_HELP);
+        }
+        break;
+    }
+    case CMD_SHOW:
+    {
+        if(exInputGroup->isHidden())
+        {
+            exInputGroup->show();
 
-//        qDebug() << "this->width:" << this->width() << "\n";
+            QSize size = this->size();
+            size.setWidth(WINDOW_ORIGNAL_WIDTH + WINDOW_EXTRA_WIDTH);
+            this->resize(size);
+//            qDebug()<< "extraInputGroup->width:" << extraInputGroup->width() << "\n";
+        }
+        break;
     }
-    else if(inputString.isEmpty())
+    case CMD_HIDE:
     {
-        showHelpInfo();
+        if(!exInputGroup->isHidden())
+        {
+            exInputGroup->hide();
+
+            QSize size = this->size();
+            size.setWidth(WINDOW_ORIGNAL_WIDTH);
+            this->resize(size);
+//                qDebug() << "this->width:" << this->width() << "\n";
+        }
+        break;
     }
-    else
+    case CMD_HYTERA_CUSTOMIZED:
+    case CMD_HYTERA_CUSTOMIZED_AT:
+    case CMD_HYTERA_CUSTOMIZED_DIAL:
     {
-        //do nothing for now
+        if(exInputGroup->isHidden())
+        {
+            showHelpInfo(findCmd);
+        }
+        break;
+    }
+    default:
+        break;
     }
 }
 
@@ -487,8 +529,8 @@ void MainWindow::procExHexButtonClicked(int btd_id)
 
     if(exHexCheckBoxs.at(btd_id)->isChecked())
     {
-        QRegExp regex("[a-fA-F0-9 ]+$");
-        auto validator = new QRegExpValidator(regex, exLeInputs.at(btd_id));
+        QRegExp hexCodeRegex("[a-fA-F\\d ]+$");
+        auto validator = new QRegExpValidator(hexCodeRegex, exLeInputs.at(btd_id));
         exLeInputs.at(btd_id)->setValidator(validator);
     }
     else
@@ -532,17 +574,131 @@ void MainWindow::procExSendButtonClicked(int btd_id)
     }
 }
 
-void MainWindow::showHelpInfo(void)
+void MainWindow::showHelpInfo(SERIAL_CMD_TYPE cmd)
 {
     QStringList hlpInfo;
 
-    hlpInfo.push_back(tr("0.Welcome to use and spread this open source serial port tool."));
-    hlpInfo.push_back(tr("1.This tool is developed under Qt creator using QT5 in C++, thanks for QT's easy-use."));
-    hlpInfo.push_back(tr("2.Input :show extra or :se for extra features, and :hide extra or :he to hide them."));
-    hlpInfo.push_back(tr("3.Any good idea to improve this tool, click contact author."));
+    if(CMD_HELP == cmd)
+    {
+        hlpInfo.push_back(tr("0.Welcome to use and spread this open source serial port tool."));
+        hlpInfo.push_back(tr("1.This tool is developed under Qt creator using QT5 in C++, thanks for QT's easy-use."));
+        hlpInfo.push_back(tr("2.Input :show extra or :se for extra features, and :hide extra or :he to hide them."));
+        hlpInfo.push_back(tr("3.Any good idea to improve this tool, click contact author."));
+    }
+    else if(CMD_HYTERA_CUSTOMIZED == cmd)
+    {
+        hlpInfo.push_back(tr("Welcome to Hytera's customized page.\n"));
+        hlpInfo.push_back(tr("0.Input :hytera at or :ha to view some useful AT commands for Tetra G1.5 terminal development."));
+        hlpInfo.push_back(tr("1.Input :hytera dial or :hd to view most dial-based commands for Tetra G1.5 terminal development."));
+    }
+    else if(CMD_HYTERA_CUSTOMIZED_AT == cmd)
+    {
+        hlpInfo.push_back(tr("This page holds some of Hytera Tetra G1.5 radio's AT command example, it's designed for Hytera's engigeers."));
+        hlpInfo.push_back(tr("\n<0> Group Manage"));
+        hlpInfo.push_back(tr("  |-<0.1> DGNA - single assign / deassign"));
+        hlpInfo.push_back(tr("        |-> AT+DGNA=0,0,1,500001,1,3,0"));
+        hlpInfo.push_back(tr("        |-> AT+DGNA=1,0,1,500001"));
+        hlpInfo.push_back(tr("  |-<0.2> DGNA - multi assign / deassign"));
+        hlpInfo.push_back(tr("        |-> AT+DGNA=0,0,2,500001,1,3,0,500002,1,3,0"));
+        hlpInfo.push_back(tr("        |-> AT+DGNA=1,0,2,500001,500002"));
+        hlpInfo.push_back(tr("\n<1> Others"));
+        hlpInfo.push_back(tr("  |-<1.1> LOG - on / off"));
+        hlpInfo.push_back(tr("        |-> AT+LOG=1"));
+        hlpInfo.push_back(tr("        |-> AT+LOG=0"));
+    }
+    else if(CMD_HYTERA_CUSTOMIZED_DIAL == cmd)
+    {
+        hlpInfo.push_back(tr("This page holds some of Hytera Tetra G1.5 radio's dial-based command list, it's designed for Hytera's engigeers."));
 
+        hlpInfo.push_back(tr("\nFor PT580H series full keypad model, command list is provided as below. - PT580H系列全键盘机型支持的拨号指令列表."));
+        hlpInfo.push_back(tr("<0> *#1# :MS start to output RT trace data - 输出实时TRACE数据"));
+        hlpInfo.push_back(tr("<1> *#2# :MS stop to output RT trace data - 停止输出实时TRACE数据"));
+        hlpInfo.push_back(tr("<2> *#4# :Freeze RTtrace Buffer - 暂停RTtrace Buffer数据存储"));
+        hlpInfo.push_back(tr("<3> *#5# :Resume RTtrace Buffer - 恢复RTtrace Buffer数据存储"));
+        hlpInfo.push_back(tr("<4> *#6# :Clear RTtrace Buffer - 清除RTtrace Buffer数据存储"));
+        hlpInfo.push_back(tr("<5> *#7# :catch trace include checksum with stack power off - 关闭协议栈抓取含校验和的TRACE"));
+        hlpInfo.push_back(tr("<6> *#8# :Get Task_RTtrace Info - 获取TRACE任务信息"));
+        hlpInfo.push_back(tr("<7> *#00# :delete encrypt key directly - 紧急删除加密密钥"));
+        hlpInfo.push_back(tr("<8> *#05# :show cell information - 小区信息"));
+        hlpInfo.push_back(tr("<9> *#06# :show version information - 版本信息"));
+        hlpInfo.push_back(tr("<10> *#07# :set MMI always on mode flag true - 上层调试接口"));
+        hlpInfo.push_back(tr("<11> *#08# :set MMI always on mode flag false - 上层调试接口"));
+        hlpInfo.push_back(tr("<12> *#73# :tetra packet data debug - TETRA分组数据调试"));
+        hlpInfo.push_back(tr("<13> *#90# :Resume Task_RTtrace - 若TRACE任务处于挂起状态，恢复其至运行状态"));
+        hlpInfo.push_back(tr("<14> *#91# :Enable RT Trace function, MS will respond RT Trace CMD - 若TRACE任务未处于挂起状态，开启终端响应实时TRACE指令的功能"));
+        hlpInfo.push_back(tr("<15> *#92# :Disable RT Trace function, MS will respond RT Trace CMD - 若TRACE任务未处于挂起状态，关闭终端响应实时TRACE指令的功能"));
+        hlpInfo.push_back(tr("<16> *#93# :Suspend Task_RTtrace - 若TRACE任务未处于挂起状态，切换其至挂起状态"));
+        hlpInfo.push_back(tr("<17> *2222# :enter engineering mode - 工程模式"));
+        hlpInfo.push_back(tr("<18> *2223# :enter degradation mode - 退化模式"));
+        hlpInfo.push_back(tr("<19> *4224# :offlineLog_Clean(messageOnFlash) - 底层调试接口"));
+        hlpInfo.push_back(tr("<20> *10080# :BSP_EnableMaxqSimFunc() - 底层调试接口"));
+        hlpInfo.push_back(tr("<21> *10081# :BSP_DisableMaxqSimFunc() - 底层调试接口"));
+        hlpInfo.push_back(tr("<22> *10086# :BSP_SetMaxqProg - 底层调试接口"));
+        hlpInfo.push_back(tr("<23> *10087# :BSP_SetMaxqRst - 底层调试接口"));
+        hlpInfo.push_back(tr("<24> *10088# :BSP_1850Switch(1) - 底层调试接口"));
+        hlpInfo.push_back(tr("<25> *10089# :BSP_1850Switch(0) - 底层调试接口"));
+        hlpInfo.push_back(tr("<26> *10097# :OTAK_MngKey_PrintKEY() - OTAK调试接口"));
+        hlpInfo.push_back(tr("<27> *10098# :OTAK_TEK_PrintKEY() - OTAK调试接口"));
+        hlpInfo.push_back(tr("<28> *10099# :OTAK_AssTab_PrintAssTabElmt() - OTAK调试接口"));
+        hlpInfo.push_back(tr("<29> *222*07# :catch trace with stack power off - 关闭协议栈抓取TRACE"));
+        hlpInfo.push_back(tr("<30> *222*08# :set MMI auto test flag true - 设置MMI自动测试标志为真"));
+        hlpInfo.push_back(tr("<31> *222*09# :catch trace with stack suspend - 暂停协议栈并抓取TRACE"));
+        hlpInfo.push_back(tr("<32> *222*10# :reverse the state of MMI watch dog timer log switch - 翻转MMI看门狗定时器打印开关"));
+        hlpInfo.push_back(tr("<33> *222*11# :power save mode - 底层调试接口"));
+        hlpInfo.push_back(tr("<34> *222*21# :BSP_Debug1() - 底层调试接口"));
+        hlpInfo.push_back(tr("<35> *222*22# :BSP_Debug2() - 底层调试接口"));
+        hlpInfo.push_back(tr("<36> *222*23# :BSP_Debug3() - 底层调试接口"));
+        hlpInfo.push_back(tr("<37> *222*24# :BSP_Debug4() - 底层调试接口"));
+        hlpInfo.push_back(tr("<38> *222*25# :BSP_Debug5() - 底层调试接口"));
+        hlpInfo.push_back(tr("<39> *222*26# :BSP_Debug6() - 底层调试接口"));
+        hlpInfo.push_back(tr("<40> *222*27# :catch trace include checksum with stack power off - 关闭协议栈抓取含校验和的TRACE"));
+        hlpInfo.push_back(tr("<41> *222*28# :BSP_Debug7() - 底层调试接口"));
+        hlpInfo.push_back(tr("<42> *333*10# :BSP_Debug8() - 底层调试接口"));
+        hlpInfo.push_back(tr("<43> *333*20# :BSP_Debug9() - 底层调试接口"));
+        hlpInfo.push_back(tr("<44> *66330# :delete model number file for debug - 调试用删除MN码存储文件"));
+        hlpInfo.push_back(tr("<45> *66335# :display model number for debug - 调试用显示MN码"));
+        hlpInfo.push_back(tr("<46> *888*25# :BSP_Dsplog_Set_group1() - 底层调试接口"));
+        hlpInfo.push_back(tr("<47> *888*26# :BSP_Dsplog_Set_group2() - 底层调试接口"));
+        hlpInfo.push_back(tr("<48> *888*27# :BSP_Dsplog_Set_group3() - 底层调试接口"));
+        hlpInfo.push_back(tr("<49> *888*28# :BSP_Dsplog_Set_group4() - 底层调试接口"));
+        hlpInfo.push_back(tr("<50> *888*29# :DspLog_Show() - 底层调试接口"));
+        hlpInfo.push_back(tr("<51> *888*30# :offlineLog_Clean(messageOnFlash) - 底层调试接口"));
+        hlpInfo.push_back(tr("<52> *888*31# :offlineLog_flashSave(OLL_TYPE_MANUAL) - 底层调试接口"));
+        hlpInfo.push_back(tr("<53> *888*32# :offlineLog_showOops(messageOnFlash) - 底层调试接口"));
+        hlpInfo.push_back(tr("<54> *888*33# :offlineLog_showOops(messageOnRam) - 底层调试接口"));
+        hlpInfo.push_back(tr("<55> *888*34# :offlineLog_timeStreamLog(messageOnRam) - 底层调试接口"));
+        hlpInfo.push_back(tr("<56> *888*35# :offlineLog_showUserlog(messageOnRam,ch) - 底层调试接口"));
+        hlpInfo.push_back(tr("<57> *888*36# :offlineLog_showInstantTaskLog() - 底层调试接口"));
+        hlpInfo.push_back(tr("<58> *888*37# :offlineLog_onOff(offlineLog_on) - 底层调试接口"));
+        hlpInfo.push_back(tr("<59> *888*38# :offlineLog_onOff(offlineLog_off) - 底层调试接口"));
+        hlpInfo.push_back(tr("<60> *888*39# :close trace mode - 关闭TRACE模式"));
+        hlpInfo.push_back(tr("<61> *888*40# :open trace mode - 开启TRACE模式"));
+        hlpInfo.push_back(tr("<62> *888*55# :get dsp type, if support E2EE, do delete key - 获取DSP类型，若支持E2EE加密则删除密钥"));
+        hlpInfo.push_back(tr("<63> *888*99# :debugSystem_startUp() - 底层调试接口"));
+        hlpInfo.push_back(tr("<64> *#999*101# :restart terminal and enter bt firmware update mode - 重启并进入蓝牙固件升级模式"));
+
+        hlpInfo.push_back(tr("\nFor PT560H series limit keypad model, command list is provided as below(H is short for hang up key, 1/2/3 is short for F1/F2/F3 key)."
+                             " - PT560H系列简化键盘机型支持的拨号指令列表(H代表挂机键，1/2/3代表F1/F2/F3编程键)."));
+        hlpInfo.push_back(tr("<0> H112H :enter function switch menu - 功能开关菜单"));
+        hlpInfo.push_back(tr("<1> H113H :enter tp debug menu - TP调试菜单"));
+        hlpInfo.push_back(tr("<2> H121H :enter engineering mode menu - 工程模式菜单"));
+        hlpInfo.push_back(tr("<3> H122H :enter realtime trace menu - 实时TRACE菜单"));
+        hlpInfo.push_back(tr("<4> H133H :enter dsp debug menu - DSP调试菜单"));
+        hlpInfo.push_back(tr("<5> H223H :enter bsp debug menu - BSP调试菜单"));
+        hlpInfo.push_back(tr("<6> H233H :enter offline log menu - 离线日志菜单"));
+        hlpInfo.push_back(tr("<7> H1122H :show version information - 版本信息"));
+        hlpInfo.push_back(tr("<8> H1133H :enter engineering mode - 工程模式"));
+        hlpInfo.push_back(tr("<9> H1232H :delete encrypt key directly - 紧急删除加密密钥"));
+        hlpInfo.push_back(tr("<10> H2211H :show cell information - 小区信息"));
+    }
+
+    plntxtOutput->clear();
     foreach(auto elem, hlpInfo)
         plntxtOutput->appendPlainText(elem);
+
+    QTextCursor cursor = plntxtOutput->textCursor();
+    cursor.movePosition(QTextCursor::Start);
+    plntxtOutput->setTextCursor(cursor);
 }
 
 void MainWindow::showTime(void)
@@ -705,8 +861,8 @@ void MainWindow::procSendhexStateChanged(void)
 
     if(sendhex->isChecked())
     {
-        QRegExp regex("[a-fA-F0-9 ]+$");
-        auto validator = new QRegExpValidator(regex, leInput);
+        QRegExp hexCodeRegex("[a-fA-F\\d ]+$");
+        auto validator = new QRegExpValidator(hexCodeRegex, leInput);
         leInput->setValidator(validator);
     }
     else
