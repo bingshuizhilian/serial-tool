@@ -42,6 +42,8 @@ private:
         CMD_HELP,
         CMD_SHOW,
         CMD_HIDE,
+        CMD_SAVE_CONFIG_FILE,
+        CMD_LOAD_CONFIG_FILE,
         CMD_HYTERA_CUSTOMIZED,
         CMD_HYTERA_CUSTOMIZED_AT,
         CMD_HYTERA_CUSTOMIZED_DIAL,
@@ -51,6 +53,7 @@ private:
     const static int WINDOW_ORIGNAL_WIDTH = 660;
     const static int WINDOW_EXTRA_WIDTH = 360;
     const static int EXTRA_ITEM_NUMBER = 10;
+    const QString SETTINGS_FILE_NAME = "settings.ini";
 
     QPushButton* btnOpenClose;
     QLabel* labelTimeDisp;
@@ -64,7 +67,7 @@ private:
     QComboBox* parity;
     QComboBox* flowcontrol;
     QPushButton* btnClrScrn;
-    QComboBox* pltBox;
+    QComboBox* theme;
     QPushButton* btnSave;
     QPushButton* connectStatus;
     QLineEdit* leInput;
@@ -112,6 +115,7 @@ private slots:
 private:
     void openSerialPort(void);
     void closeSerialPort(void);
+    void procConfigFile(SERIAL_CMD_TYPE cmd);
     void showHelpInfo(SERIAL_CMD_TYPE cmd);
     void exInputGroupInitialization(void);
     void componentsInitialization(void);
