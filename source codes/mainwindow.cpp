@@ -523,7 +523,7 @@ void MainWindow::procExAutosendTimerTimeout(void)
         whichExContentIsToBeSent %= EXTRA_ITEM_NUMBER;
     }while(exLeInputs.at(whichExContentIsToBeSent)->text().isEmpty());
 
-    qDebug() << "whichExContentIsToBeSent" << whichExContentIsToBeSent << "\n";
+//    qDebug() << "whichExContentIsToBeSent" << whichExContentIsToBeSent << "\n";
 
     if(!exLeInputs.at(whichExContentIsToBeSent)->text().isEmpty())
     {
@@ -648,7 +648,7 @@ void MainWindow::showHelpInfo(SERIAL_CMD_TYPE cmd)
         hlpInfo.push_back(tr("0.Welcome to use and spread this open source serial port tool."));
         hlpInfo.push_back(tr("1.This tool is developed under Qt creator using QT5 in C++, thanks for QT's easy-use."));
         hlpInfo.push_back(tr("2.Input :save config file or :scf or :save to save config file, "
-                             "and :load config file or or :lcf or :load to load config file."));
+                             "and :load config file or :lcf or :load to load config file."));
         hlpInfo.push_back(tr("3.Input :show extra or :se for extra features, and :hide extra or :he to hide them."));
         hlpInfo.push_back(tr("4.Any good idea to improve this tool, click contact author."));
     }
