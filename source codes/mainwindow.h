@@ -53,7 +53,7 @@ private:
     const static int WINDOW_ORIGNAL_WIDTH = 660;
     const static int WINDOW_EXTRA_WIDTH = 360;
     const static int EXTRA_ITEM_NUMBER = 10;
-    const QString SETTINGS_FILE_NAME = "settings.ini";
+    const QString CONFIG_FILE_NAME = "config.ini";
 
     QPushButton* btnOpenClose;
     QLabel* labelTimeDisp;
