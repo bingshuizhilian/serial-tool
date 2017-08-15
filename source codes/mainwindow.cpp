@@ -354,8 +354,8 @@ void MainWindow::procQuickCommand(void)
     cmdList.push_back({ CMD_HIDE, {":hide extra", ":he"} });
     cmdList.push_back({ CMD_RESET, {":reset", ":rst"} });
     cmdList.push_back({ CMD_CLEAR_INPUT, {":clear input", ":ci"} });
-    cmdList.push_back({ CMD_SAVE_CONFIG_FILE, {":save config file", ":scf", ":save"} });
-    cmdList.push_back({ CMD_LOAD_CONFIG_FILE, {":load config file", ":lcf", ":load"} });
+    cmdList.push_back({ CMD_SAVE_CONFIG_FILE, {":save config file", ":scf"} });
+    cmdList.push_back({ CMD_LOAD_CONFIG_FILE, {":load config file", ":lcf"} });
     cmdList.push_back({ CMD_HYTERA_CUSTOMIZED, {":hytera customized", ":hc"} });
     cmdList.push_back({ CMD_HYTERA_CUSTOMIZED_AT, {":hytera at", ":ha"} });
     cmdList.push_back({ CMD_HYTERA_CUSTOMIZED_DIAL, {":hytera dial", ":hd"} });
@@ -381,10 +381,7 @@ void MainWindow::procQuickCommand(void)
     {
     case CMD_HELP:
     {
-        if(exInputGroup->isHidden())
-        {
-            showHelpInfo(findCmd);
-        }
+        showHelpInfo(findCmd);
         break;
     }
     case CMD_SHOW:
@@ -551,31 +548,31 @@ void MainWindow::procExAutosendTimerTimeout(void)
     }
 }
 
-void MainWindow::procExHexButtonClicked(int btd_id)
+void MainWindow::procExHexButtonClicked(int btn_id)
 {
 //    qDebug() << "btd_id" << btd_id << "\n";
-    exLeInputs.at(btd_id)->clear();
+    exLeInputs.at(btn_id)->clear();
 
-    if(exHexCheckBoxs.at(btd_id)->isChecked())
+    if(exHexCheckBoxs.at(btn_id)->isChecked())
     {
         QRegExp hexCodeRegex("[a-fA-F\\d ]+$");
-        auto validator = new QRegExpValidator(hexCodeRegex, exLeInputs.at(btd_id));
-        exLeInputs.at(btd_id)->setValidator(validator);
+        auto validator = new QRegExpValidator(hexCodeRegex, exLeInputs.at(btn_id));
+        exLeInputs.at(btn_id)->setValidator(validator);
     }
     else
     {
-        exLeInputs.at(btd_id)->setValidator(0);
+        exLeInputs.at(btn_id)->setValidator(0);
     }
 }
 
-void MainWindow::procExSendButtonClicked(int btd_id)
+void MainWindow::procExSendButtonClicked(int btn_id)
 {
 //    qDebug() << "btd_id" << btd_id << "\n";
-    QString inputString = exLeInputs.at(btd_id)->text();
+    QString inputString = exLeInputs.at(btn_id)->text();
 
     if(mySerialPort->isOpen())
     {
-        if(exHexCheckBoxs.at(btd_id)->isChecked())
+        if(exHexCheckBoxs.at(btn_id)->isChecked())
         {
             QByteArray hexDecoded = QByteArray::fromHex(inputString.toLatin1());
             sendbytecounter += mySerialPort->write(hexDecoded);
@@ -854,11 +851,11 @@ void MainWindow::showHelpInfo(SERIAL_CMD_TYPE cmd)
     {
         hlpInfo.push_back(tr("0.Welcome to use and spread this open source serial port tool."));
         hlpInfo.push_back(tr("1.This tool is developed under Qt creator using QT5 in C++, thanks for QT's easy-use."));
-        hlpInfo.push_back(tr("2.Input :save config file or :scf or :save to save config file, "
-                             "and :load config file or :lcf or :load to load config file,"
+        hlpInfo.push_back(tr("2.Input :show extra or :se for extra features, and :hide extra or :he to hide them."));
+        hlpInfo.push_back(tr("3.Input :save config file or :scf to save config file, and :load config file or :lcf to load config file, "
                              "take care that the tool will not save or load config file automatically."));
-        hlpInfo.push_back(tr("3.Input :show extra or :se for extra features, and :hide extra or :he to hide them."));
-        hlpInfo.push_back(tr("4.Any good idea to improve this tool, click contact author."));
+        hlpInfo.push_back(tr("4.Input :reset or :rst to reset the tool, and :clear input or :ci to clear extra input area."));
+        hlpInfo.push_back(tr("5.Any good idea to improve this tool, click contact author."));
     }
     else if(CMD_HYTERA_CUSTOMIZED == cmd)
     {
@@ -1003,6 +1000,8 @@ void MainWindow::procResetCmd(SERIAL_CMD_TYPE cmd)
         autosend->setChecked(false);
         leAutoSendInterval->setText("1000");
         leAutoSendCounter->setText("0");
+        plntxtOutput->clear();
+        leInput->clear();
 
         this->hotUpdateSettings();
     }
