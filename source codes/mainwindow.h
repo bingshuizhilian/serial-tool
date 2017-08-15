@@ -114,8 +114,8 @@ private slots:
     void procAutosendTimerTimeout(void);
     void portMonitor(void);
     void procQuickCommand(void);
-    void procExSendButtonClicked(int btd_id);
-    void procExHexButtonClicked(int btd_id);
+    void procExSendButtonClicked(int btn_id);
+    void procExHexButtonClicked(int btn_id);
     void procExAutosendStateChanged(void);
     void procExAutosendTimerTimeout(void);
 private:
