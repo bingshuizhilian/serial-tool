@@ -18,7 +18,11 @@
 #include <QLineEdit>
 #include <QCheckBox>
 #include <QGroupBox>
-
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonValue>
+#include <QJsonParseError>
 #include <QDebug>
 
 QT_BEGIN_NAMESPACE
@@ -42,6 +46,8 @@ private:
         CMD_HELP,
         CMD_SHOW,
         CMD_HIDE,
+        CMD_RESET,
+        CMD_CLEAR_INPUT,
         CMD_SAVE_CONFIG_FILE,
         CMD_LOAD_CONFIG_FILE,
         CMD_HYTERA_CUSTOMIZED,
@@ -53,7 +59,7 @@ private:
     const static int WINDOW_ORIGNAL_WIDTH = 660;
     const static int WINDOW_EXTRA_WIDTH = 360;
     const static int EXTRA_ITEM_NUMBER = 10;
-    const QString CONFIG_FILE_NAME = "config.ini";
+    const QString CONFIG_FILE_NAME = "config.json";
 
     QPushButton* btnOpenClose;
     QLabel* labelTimeDisp;
@@ -117,6 +123,7 @@ private:
     void closeSerialPort(void);
     void procConfigFile(SERIAL_CMD_TYPE cmd);
     void showHelpInfo(SERIAL_CMD_TYPE cmd);
+    void procResetCmd(SERIAL_CMD_TYPE cmd);
     void exInputGroupInitialization(void);
     void componentsInitialization(void);
 };
