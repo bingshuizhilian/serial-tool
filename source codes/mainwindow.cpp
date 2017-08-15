@@ -550,7 +550,7 @@ void MainWindow::procExAutosendTimerTimeout(void)
 
 void MainWindow::procExHexButtonClicked(int btn_id)
 {
-//    qDebug() << "btd_id" << btd_id << "\n";
+//    qDebug() << "btn_id" << btd_id << "\n";
     exLeInputs.at(btn_id)->clear();
 
     if(exHexCheckBoxs.at(btn_id)->isChecked())
@@ -567,7 +567,6 @@ void MainWindow::procExHexButtonClicked(int btn_id)
 
 void MainWindow::procExSendButtonClicked(int btn_id)
 {
-//    qDebug() << "btd_id" << btd_id << "\n";
     QString inputString = exLeInputs.at(btn_id)->text();
 
     if(mySerialPort->isOpen())
