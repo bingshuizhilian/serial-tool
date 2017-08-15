@@ -269,6 +269,15 @@ release/moc_mainwindow.cpp: D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QtGlobal
 		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtWidgets/qcheckbox.h \
 		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtWidgets/QGroupBox \
 		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtWidgets/qgroupbox.h \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QJsonDocument \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/qjsondocument.h \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/qjsonvalue.h \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QJsonObject \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/qjsonobject.h \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QJsonArray \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/qjsonarray.h \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QJsonValue \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QJsonParseError \
 		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QDebug \
 		../source\ codes/mainwindow.h \
 		release/moc_predefs.h \
@@ -461,6 +470,15 @@ release/main.o: ../source\ codes/main.cpp ../source\ codes/mainwindow.h \
 		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtWidgets/qcheckbox.h \
 		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtWidgets/QGroupBox \
 		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtWidgets/qgroupbox.h \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QJsonDocument \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/qjsondocument.h \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/qjsonvalue.h \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QJsonObject \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/qjsonobject.h \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QJsonArray \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/qjsonarray.h \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QJsonValue \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QJsonParseError \
 		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QDebug \
 		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtWidgets/QApplication \
 		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtWidgets/qapplication.h \
@@ -636,6 +654,15 @@ release/mainwindow.o: ../source\ codes/mainwindow.cpp ../source\ codes/mainwindo
 		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtWidgets/qcheckbox.h \
 		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtWidgets/QGroupBox \
 		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtWidgets/qgroupbox.h \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QJsonDocument \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/qjsondocument.h \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/qjsonvalue.h \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QJsonObject \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/qjsonobject.h \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QJsonArray \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/qjsonarray.h \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QJsonValue \
+		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QJsonParseError \
 		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QDebug \
 		UI_mainwindow.h \
 		D:/Qt/Qt5.8.0/5.8/mingw53_32/include/QtCore/QVariant \
