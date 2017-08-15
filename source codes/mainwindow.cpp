@@ -352,6 +352,8 @@ void MainWindow::procQuickCommand(void)
     cmdList.push_back({ CMD_HELP, {":help", ":hlp", ":?"} });
     cmdList.push_back({ CMD_SHOW, {":show extra", ":se"} });
     cmdList.push_back({ CMD_HIDE, {":hide extra", ":he"} });
+    cmdList.push_back({ CMD_RESET, {":reset", ":rst"} });
+    cmdList.push_back({ CMD_CLEAR_INPUT, {":clear input", ":ci"} });
     cmdList.push_back({ CMD_SAVE_CONFIG_FILE, {":save config file", ":scf", ":save"} });
     cmdList.push_back({ CMD_LOAD_CONFIG_FILE, {":load config file", ":lcf", ":load"} });
     cmdList.push_back({ CMD_HYTERA_CUSTOMIZED, {":hytera customized", ":hc"} });
@@ -394,7 +396,6 @@ void MainWindow::procQuickCommand(void)
             QSize size = this->size();
             size.setWidth(WINDOW_ORIGNAL_WIDTH + WINDOW_EXTRA_WIDTH);
             this->resize(size);
-//            qDebug()<< "extraInputGroup->width:" << extraInputGroup->width() << "\n";
         }
         break;
     }
@@ -407,8 +408,13 @@ void MainWindow::procQuickCommand(void)
             QSize size = this->size();
             size.setWidth(WINDOW_ORIGNAL_WIDTH);
             this->resize(size);
-//                qDebug() << "this->width:" << this->width() << "\n";
         }
+        break;
+    }
+    case CMD_RESET:
+    case CMD_CLEAR_INPUT:
+    {
+        procResetCmd(findCmd);
         break;
     }
     case CMD_SAVE_CONFIG_FILE:
@@ -517,6 +523,20 @@ void MainWindow::procExAutosendTimerTimeout(void)
         return;
     }
 
+    int totalEmptyInputNum = 0;
+    for(auto i = 0; i < EXTRA_ITEM_NUMBER; ++i)
+    {
+        if(exLeInputs.at(i)->text().isEmpty())
+        {
+            ++totalEmptyInputNum;
+        }
+    }
+
+    if(EXTRA_ITEM_NUMBER == totalEmptyInputNum)
+    {
+        return;
+    }
+
     do
     {
         ++whichExContentIsToBeSent;
@@ -585,8 +605,6 @@ void MainWindow::procExSendButtonClicked(int btd_id)
 
 void MainWindow::procConfigFile(SERIAL_CMD_TYPE cmd)
 {
-//    qDebug() << "cmd" << QDir::currentPath() + CONFIG_FILE_NAME << "\n";
-//    plntxtOutput->appendPlainText(QDir::currentPath() + '/' + CONFIG_FILE_NAME);
     if(CMD_SAVE_CONFIG_FILE == cmd)
     {
         QString fileName = QDir::currentPath() + '/' + CONFIG_FILE_NAME;
@@ -597,28 +615,41 @@ void MainWindow::procConfigFile(SERIAL_CMD_TYPE cmd)
             return;
         }
 
+        QJsonObject jsonSettings;
+        jsonSettings.insert("ComName", choosecoms->currentText());
+        jsonSettings.insert("Baudrate", baudrates->currentText());
+        jsonSettings.insert("DataBits", databits->currentText());
+        jsonSettings.insert("Parity", parity->currentText());
+        jsonSettings.insert("StopBits", stopbits->currentText());
+        jsonSettings.insert("FlowCtrl", flowcontrol->currentText());
+        jsonSettings.insert("Theme", theme->currentText());
+
+        QJsonObject jsonEdit;
+        jsonEdit.insert("Showhex", showhex->isChecked());
+        jsonEdit.insert("Sendhex", sendhex->isChecked());
+        jsonEdit.insert("Send0D", send0D->isChecked());
+        jsonEdit.insert("Send0A", send0A->isChecked());
+
+        QJsonArray jsonExtraHexBox, jsonExtraInput;
+        for(auto i = 0; i < EXTRA_ITEM_NUMBER; ++i)
+        {
+            jsonExtraHexBox.append(exHexCheckBoxs.at(i)->isChecked());
+            jsonExtraInput.append(exLeInputs.at(i)->text());
+        }
+
+        QJsonObject jsonConfig;
+        jsonConfig.insert("Settings", jsonSettings);
+        jsonConfig.insert("Edit", jsonEdit);
+        jsonConfig.insert("ExtraHexBox", jsonExtraHexBox);
+        jsonConfig.insert("ExtraInput", jsonExtraInput);
+
+        QJsonDocument document;
+        document.setObject(jsonConfig);
+        QByteArray byte_array = document.toJson(QJsonDocument::Compact);
+        QString jsonEncodedString(byte_array);
+
         QTextStream out(&file);
-        out << "[ComName]:" + choosecoms->currentText() + "\n";
-        out << "[Baudrate]:" + baudrates->currentText() + "\n";
-        out << "[DataBits]:" + databits->currentText() + "\n";
-        out << "[Parity]:" + parity->currentText() + "\n";
-        out << "[StopBits]:" + stopbits->currentText() + "\n";
-        out << "[FlowCtrl]:" + flowcontrol->currentText() + "\n";
-        out << "[Theme]:" + theme->currentText() + "\n";
-        out << "[EditSettings]:" + QString::number(showhex->isChecked()) + QString::number(sendhex->isChecked())
-               + QString::number(send0D->isChecked()) + QString::number(send0A->isChecked()) + "\n";
-
-        out << "[ExtraHexState]:";
-        for(auto i = 0; i < EXTRA_ITEM_NUMBER; ++i)
-        {
-            out << QString::number(exHexCheckBoxs.at(i)->isChecked());
-        }
-        out << "\n";
-        for(auto i = 0; i < EXTRA_ITEM_NUMBER; ++i)
-        {
-            out << "[ExtraInput" + QString::number(i) + "]:" + exLeInputs.at(i)->text() + "\n";
-        }
-
+        out << jsonEncodedString;
         file.close();
     }
     else if(CMD_LOAD_CONFIG_FILE == cmd)
@@ -632,8 +663,184 @@ void MainWindow::procConfigFile(SERIAL_CMD_TYPE cmd)
         }
 
         QTextStream in(&file);
-
+        QString jsonEncodedString = in.readAll();
         file.close();
+
+        QJsonParseError jsonError;
+        QJsonDocument parseDoucment = QJsonDocument::fromJson(jsonEncodedString.toLocal8Bit(), &jsonError);
+        if(QJsonParseError::NoError == jsonError.error)
+        {
+            if(parseDoucment.isObject())
+            {
+                QJsonObject docObj = parseDoucment.object();
+                if(docObj.contains("Settings"))
+                {
+                    QJsonValue value = docObj.take("Settings");
+                    if(value.isObject())
+                    {
+                        QJsonObject settingsObj = value.toObject();
+
+                        if(settingsObj.contains("ComName"))
+                        {
+                            QJsonValue value = settingsObj.take("ComName");
+                            if(value.isString())
+                            {
+                                choosecoms->setCurrentText(value.toString());
+                            }
+                        }
+
+                        if(settingsObj.contains("Baudrate"))
+                        {
+                            QJsonValue value = settingsObj.take("Baudrate");
+                            if(value.isString())
+                            {
+                                baudrates->setCurrentText(value.toString());
+                            }
+                        }
+
+                        if(settingsObj.contains("DataBits"))
+                        {
+                            QJsonValue value = settingsObj.take("DataBits");
+                            if(value.isString())
+                            {
+                                databits->setCurrentText(value.toString());
+                            }
+                        }
+
+                        if(settingsObj.contains("Parity"))
+                        {
+                            QJsonValue value = settingsObj.take("Parity");
+                            if(value.isString())
+                            {
+                                parity->setCurrentText(value.toString());
+                            }
+                        }
+
+                        if(settingsObj.contains("StopBits"))
+                        {
+                            QJsonValue value = settingsObj.take("StopBits");
+                            if(value.isString())
+                            {
+                                stopbits->setCurrentText(value.toString());
+                            }
+                        }
+
+                        if(settingsObj.contains("FlowCtrl"))
+                        {
+                            QJsonValue value = settingsObj.take("FlowCtrl");
+                            if(value.isString())
+                            {
+                                flowcontrol->setCurrentText(value.toString());
+                            }
+                        }
+
+                        if(settingsObj.contains("Theme"))
+                        {
+                            QJsonValue value = settingsObj.take("Theme");
+                            if(value.isString())
+                            {
+                                theme->setCurrentText(value.toString());
+                            }
+                        }
+                    }
+                }
+
+                if(docObj.contains("Edit"))
+                {
+                    QJsonValue value = docObj.take("Edit");
+                    if(value.isObject())
+                    {
+                        QJsonObject editObj = value.toObject();
+
+                        if(editObj.contains("Showhex"))
+                        {
+                            QJsonValue value = editObj.take("Showhex");
+                            if(value.isBool())
+                            {
+                                showhex->setChecked(value.toBool());
+                            }
+                        }
+
+                        if(editObj.contains("Sendhex"))
+                        {
+                            QJsonValue value = editObj.take("Sendhex");
+                            if(value.isBool())
+                            {
+                                sendhex->setChecked(value.toBool());
+                            }
+                        }
+
+                        if(editObj.contains("Send0D"))
+                        {
+                            QJsonValue value = editObj.take("Send0D");
+                            if(value.isBool())
+                            {
+                                send0D->setChecked(value.toBool());
+                            }
+                        }
+
+                        if(editObj.contains("Send0A"))
+                        {
+                            QJsonValue value = editObj.take("Send0A");
+                            if(value.isBool())
+                            {
+                                send0A->setChecked(value.toBool());
+                            }
+                        }
+                    }
+                }
+
+                if(docObj.contains("ExtraHexBox"))
+                {
+                    QJsonValue value = docObj.take("ExtraHexBox");
+                    if(value.isArray())
+                    {
+                        QJsonArray exHexBoxArray = value.toArray();
+                        for(auto i = 0; i < EXTRA_ITEM_NUMBER && i < exHexBoxArray.size(); ++i)
+                        {
+                            if(exHexBoxArray.at(i).isBool())
+                            {
+                                exHexCheckBoxs.at(i)->setChecked(exHexBoxArray.at(i).toBool());
+                                if(exHexCheckBoxs.at(i)->isChecked())
+                                {
+                                    QRegExp hexCodeRegex("[a-fA-F\\d ]+$");
+                                    auto validator = new QRegExpValidator(hexCodeRegex, exLeInputs.at(i));
+
+                                    exLeInputs.at(i)->setValidator(validator);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if(docObj.contains("ExtraInput"))
+                {
+                    QJsonValue value = docObj.take("ExtraInput");
+                    if(value.isArray())
+                    {
+                        QJsonArray exInputArray = value.toArray();
+                        for(auto i = 0; i < EXTRA_ITEM_NUMBER && i < exInputArray.size(); ++i)
+                        {
+                            if(exInputArray.at(i).isString())
+                            {
+                                QString input = exInputArray.at(i).toString();
+                                if(exHexCheckBoxs.at(i)->isChecked())
+                                {
+                                    QRegExpValidator validator(QRegExp("[a-fA-F\\d ]+$"));
+                                    int pos = 0;
+                                    if(QValidator::Invalid == validator.validate(input, pos))
+                                    {
+                                        input.clear();
+                                    }
+                                }
+
+                                exLeInputs.at(i)->setText(input);
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         this->hotUpdateSettings();
     }
@@ -648,7 +855,8 @@ void MainWindow::showHelpInfo(SERIAL_CMD_TYPE cmd)
         hlpInfo.push_back(tr("0.Welcome to use and spread this open source serial port tool."));
         hlpInfo.push_back(tr("1.This tool is developed under Qt creator using QT5 in C++, thanks for QT's easy-use."));
         hlpInfo.push_back(tr("2.Input :save config file or :scf or :save to save config file, "
-                             "and :load config file or :lcf or :load to load config file."));
+                             "and :load config file or :lcf or :load to load config file,"
+                             "take care that the tool will not save or load config file automatically."));
         hlpInfo.push_back(tr("3.Input :show extra or :se for extra features, and :hide extra or :he to hide them."));
         hlpInfo.push_back(tr("4.Any good idea to improve this tool, click contact author."));
     }
@@ -766,6 +974,38 @@ void MainWindow::showHelpInfo(SERIAL_CMD_TYPE cmd)
     QTextCursor cursor = plntxtOutput->textCursor();
     cursor.movePosition(QTextCursor::Start);
     plntxtOutput->setTextCursor(cursor);
+}
+
+void MainWindow::procResetCmd(SERIAL_CMD_TYPE cmd)
+{
+    if(CMD_CLEAR_INPUT == cmd || CMD_RESET == cmd)
+    {
+        for(auto i = 0; i < EXTRA_ITEM_NUMBER; ++i)
+        {
+            exHexCheckBoxs.at(i)->setChecked(false);
+            exLeInputs.at(i)->clear();
+        }
+    }
+
+    if(CMD_RESET == cmd)
+    {
+        choosecoms->setCurrentIndex(0);
+        baudrates->setCurrentIndex(4);
+        databits->setCurrentIndex(3);
+        parity->setCurrentIndex(0);
+        stopbits->setCurrentIndex(0);
+        flowcontrol->setCurrentIndex(0);
+        theme->setCurrentIndex(0);
+        showhex->setChecked(false);
+        sendhex->setChecked(false);
+        send0D->setChecked(false);
+        send0A->setChecked(false);
+        autosend->setChecked(false);
+        leAutoSendInterval->setText("1000");
+        leAutoSendCounter->setText("0");
+
+        this->hotUpdateSettings();
+    }
 }
 
 void MainWindow::showTime(void)
