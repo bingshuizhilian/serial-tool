@@ -348,7 +348,7 @@ void MainWindow::procQuickCommand(void)
         return;
     }
 
-    QList<QPair<SERIAL_CMD_TYPE, QStringList>> cmdList;
+    QList<QPair<CmdType, QStringList>> cmdList;
     cmdList.push_back({ CMD_HELP, {":help", ":hlp", ":?"} });
     cmdList.push_back({ CMD_SHOW, {":show extra", ":se"} });
     cmdList.push_back({ CMD_HIDE, {":hide extra", ":he"} });
@@ -361,7 +361,7 @@ void MainWindow::procQuickCommand(void)
     cmdList.push_back({ CMD_HYTERA_CUSTOMIZED_DIAL, {":hytera dial", ":hd"} });
 
     QString inputString = leInput->text();
-    SERIAL_CMD_TYPE findCmd = CMD_NULL;
+    CmdType findCmd = CMD_NULL;
     foreach(auto pairElem, cmdList)
     {
         foreach(auto strListElem, pairElem.second)
@@ -599,7 +599,7 @@ void MainWindow::procExSendButtonClicked(int btn_id)
     }
 }
 
-void MainWindow::procConfigFile(SERIAL_CMD_TYPE cmd)
+void MainWindow::procConfigFile(CmdType cmd)
 {
     if(CMD_SAVE_CONFIG_FILE == cmd)
     {
@@ -842,7 +842,7 @@ void MainWindow::procConfigFile(SERIAL_CMD_TYPE cmd)
     }
 }
 
-void MainWindow::showHelpInfo(SERIAL_CMD_TYPE cmd)
+void MainWindow::showHelpInfo(CmdType cmd)
 {
     QStringList hlpInfo;
 
@@ -972,7 +972,7 @@ void MainWindow::showHelpInfo(SERIAL_CMD_TYPE cmd)
     plntxtOutput->setTextCursor(cursor);
 }
 
-void MainWindow::procResetCmd(SERIAL_CMD_TYPE cmd)
+void MainWindow::procResetCmd(CmdType cmd)
 {
     if(CMD_CLEAR_INPUT == cmd || CMD_RESET == cmd)
     {
@@ -1195,7 +1195,7 @@ void MainWindow::procAutosendStateChanged(void)
 
         autoSendTimer->setInterval(leAutoSendInterval->text().toInt());
         autoSendTimer->start();
-        this->procAutosendTimerTimeout(); 
+        this->procAutosendTimerTimeout();
     }
     else
     {
