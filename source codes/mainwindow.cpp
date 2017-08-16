@@ -641,7 +641,7 @@ void MainWindow::procConfigFile(CmdType cmd)
 
         QJsonDocument document;
         document.setObject(jsonConfig);
-        QByteArray byte_array = document.toJson(QJsonDocument::Compact);
+        QByteArray byte_array = document.toJson(QJsonDocument::Indented);
         QString jsonEncodedString(byte_array);
 
         QTextStream out(&file);
