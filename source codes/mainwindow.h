@@ -41,7 +41,7 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    typedef enum
+    enum CmdType
     {
         CMD_HELP,
         CMD_SHOW,
@@ -54,7 +54,7 @@ private:
         CMD_HYTERA_CUSTOMIZED_AT,
         CMD_HYTERA_CUSTOMIZED_DIAL,
         CMD_NULL
-    }SERIAL_CMD_TYPE;
+    };
 
     const static int WINDOW_ORIGNAL_WIDTH = 660;
     const static int WINDOW_EXTRA_WIDTH = 360;
@@ -121,9 +121,9 @@ private slots:
 private:
     void openSerialPort(void);
     void closeSerialPort(void);
-    void procConfigFile(SERIAL_CMD_TYPE cmd);
-    void showHelpInfo(SERIAL_CMD_TYPE cmd);
-    void procResetCmd(SERIAL_CMD_TYPE cmd);
+    void procConfigFile(CmdType cmd);
+    void showHelpInfo(CmdType cmd);
+    void procResetCmd(CmdType cmd);
     void exInputGroupInitialization(void);
     void componentsInitialization(void);
 };
