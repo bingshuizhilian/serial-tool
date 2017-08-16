@@ -850,17 +850,17 @@ void MainWindow::showHelpInfo(CmdType cmd)
     {
         hlpInfo.push_back(tr("0.Welcome to use and spread this open source serial port tool."));
         hlpInfo.push_back(tr("1.This tool is developed under Qt creator using QT5 in C++, thanks for QT's easy-use."));
-        hlpInfo.push_back(tr("2.Input :show extra or :se for extra features, and :hide extra or :he to hide them."));
-        hlpInfo.push_back(tr("3.Input :save config file or :scf to save config file, and :load config file or :lcf to load config file, "
+        hlpInfo.push_back(tr("2.Input <u>:show extra</u> or <u>:se</u> for extra features, and <u>:hide extra</u> or <u>:he</u> to hide them."));
+        hlpInfo.push_back(tr("3.Input <u>:save config file</u> or <u>:scf</u> to save config file, and <u>:load config file</u> or <u>:lcf</u> to load config file, "
                              "take care that the tool will not save or load config file automatically."));
-        hlpInfo.push_back(tr("4.Input :reset or :rst to reset the tool, and :clear input or :ci to clear extra input area."));
+        hlpInfo.push_back(tr("4.Input <u>:reset</u> or <u>:rst</u> to reset the tool, and <u>:clear input</u> or <u>:ci</u> to clear extra input area."));
         hlpInfo.push_back(tr("5.Any good idea to improve this tool, click contact author."));
     }
     else if(CMD_HYTERA_CUSTOMIZED == cmd)
     {
         hlpInfo.push_back(tr("Welcome to Hytera's customized page.\n"));
-        hlpInfo.push_back(tr("0.Input :hytera at or :ha to view some useful AT commands for Tetra G1.5 terminal development."));
-        hlpInfo.push_back(tr("1.Input :hytera dial or :hd to view most dial-based commands for Tetra G1.5 terminal development."));
+        hlpInfo.push_back(tr("0.Input <u>:hytera at</u> or <u>:ha</u> to view some useful AT commands for Tetra G1.5 terminal development."));
+        hlpInfo.push_back(tr("1.Input <u>:hytera dial</u> or <u>:hd</u> to view dial-based commands for Tetra G1.5 terminal development."));
     }
     else if(CMD_HYTERA_CUSTOMIZED_AT == cmd)
     {
@@ -965,7 +965,16 @@ void MainWindow::showHelpInfo(CmdType cmd)
 
     plntxtOutput->clear();
     foreach(auto elem, hlpInfo)
-        plntxtOutput->appendPlainText(elem);
+    {
+        if(CMD_HELP == cmd || CMD_HYTERA_CUSTOMIZED == cmd)
+        {
+            plntxtOutput->appendHtml(elem);
+        }
+        else
+        {
+            plntxtOutput->appendPlainText(elem);
+        }
+    }
 
     QTextCursor cursor = plntxtOutput->textCursor();
     cursor.movePosition(QTextCursor::Start);
