@@ -1,29 +1,16 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QtCore/QtGlobal>
 #include <QMainWindow>
+#include <QtSerialPort/QSerialPort>
 #include <QLabel>
-#include <QLayout>
 #include <QPushButton>
 #include <QPlainTextEdit>
 #include <QTimer>
-#include <QDateTime>
-#include <QtSerialPort/QSerialPort>
-#include <QtSerialPort/QSerialPortInfo>
 #include <QComboBox>
-#include <QFile>
-#include <QTextStream>
-#include <QDir>
 #include <QLineEdit>
 #include <QCheckBox>
 #include <QGroupBox>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QJsonValue>
-#include <QJsonParseError>
-#include <QDebug>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
