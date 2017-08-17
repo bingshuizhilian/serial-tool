@@ -3,6 +3,18 @@
  *******************************************************************************/
 #include "mainwindow.h"
 #include "UI_mainwindow.h"
+#include <QtCore/QtGlobal>
+#include <QtSerialPort/QSerialPortInfo>
+#include <QLayout>
+#include <QDateTime>
+#include <QFile>
+#include <QTextStream>
+#include <QDir>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonValue>
+#include <QJsonParseError>
 #include <QMessageBox>
 
 MainWindow::MainWindow(QWidget *parent) :
