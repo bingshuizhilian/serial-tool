@@ -16,6 +16,7 @@
 #include <QJsonValue>
 #include <QJsonParseError>
 #include <QMessageBox>
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
